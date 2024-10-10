@@ -1060,38 +1060,29 @@ Well this really is the half adder, where B is Cin and A is the input:
 I think we need an inc helper to carry the carry
 
 ```agda
-data _×_ (A B : Set) : Set where
-  <_,_> : A -> B -> A × B
-
-fst : {A B : Set} -> A × B -> A
-fst < x , y > = x
-
-snd : {A B : Set} -> A × B -> B
-snd < x , y > = y
-
 data Bit : Set where
   bit-o : Bit
   bit-i : Bit
 
-inc-helper : Bin → Bit → (Bin × Bit)
-inc-helper ⟨⟩ bit-o = < ⟨⟩ , bit-o > -- Non-Rollover Base Case
-inc-helper (i O) bit-o = < (fst (inc-helper i bit-o)) O , bit-o >
-inc-helper (i I) bit-o = < (fst (inc-helper i bit-o)) I , bit-o >
-inc-helper ⟨⟩ bit-i = < (⟨⟩ I) , bit-o > -- Rollover Base Case
-inc-helper (i O) bit-i = < (fst (inc-helper i bit-o)) I , bit-o >
-inc-helper (i I) bit-i = < (fst (inc-helper i bit-i)) O , bit-o >
+inc-helper : Bin → Bit → Bin
+inc-helper ⟨⟩ bit-o = ⟨⟩ -- Non-Rollover Base Case
+inc-helper (i O) bit-o = inc-helper i bit-o O
+inc-helper (i I) bit-o = inc-helper i bit-o I
+inc-helper ⟨⟩ bit-i = ⟨⟩ I -- Rollover Base Case
+inc-helper (i O) bit-i = inc-helper i bit-o I
+inc-helper (i I) bit-i = inc-helper i bit-i O
 
 inc : Bin → Bin
-inc i = fst (inc-helper i bit-i)
+inc i = inc-helper i bit-i
 
 _ = begin
-    (inc (⟨⟩ O))
+    inc (⟨⟩ O)
   ≡⟨⟩
     (⟨⟩ I)
   ∎
 
 _ = begin
-    (inc (⟨⟩ I))
+    inc (⟨⟩ I)
   ≡⟨⟩
     (⟨⟩ I O)
   ∎
@@ -1103,9 +1094,9 @@ _ = begin
   ∎
   
 _ = begin
-    (inc (⟨⟩ I I))
+    inc (⟨⟩ I I)
   ≡⟨⟩
-    (⟨⟩ I O O)
+    ⟨⟩ I O O
   ∎
 
 _ = begin
@@ -1113,12 +1104,46 @@ _ = begin
   ≡⟨⟩
     ⟨⟩ I I O O
   ∎
-```
 
-to   : ℕ → Bin
+to : ℕ → Bin
+to zero = ⟨⟩ O
+to (suc n) = inc (to n)
+
+_ = begin
+    to 4
+  ≡⟨⟩
+    ⟨⟩ I O O
+  ∎
+
+_ = begin
+    to 5
+  ≡⟨⟩
+    ⟨⟩ I O I
+  ∎
+
+inc-n : ℕ → ℕ
+inc-n = _+_ 1
+
+from-helper : Bin → ℕ → ℕ
+from-helper ⟨⟩ n = 0
+from-helper (b O) n = from-helper b (n + 1) + 0 -- TODO: Can you define an `inc` for ℕ in addition to Bin?
+from-helper (b I) n = from-helper b (n + 1) + 2 ^ n
+
 from : Bin → ℕ
+from b = from-helper b 0
 
-*END OF STUFF YOU GOTTA DEFINE TO FINISH EXERCIZE!!*
+_ = begin
+    4
+  ≡⟨⟩
+    from (⟨⟩ I O O)
+  ∎
+
+_ = begin
+    5
+  ≡⟨⟩
+    from (⟨⟩ I O I)
+  ∎
+```
 
 
 ## Standard library
