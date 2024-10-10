@@ -78,7 +78,8 @@ successor of two; and so on.
 Write out `7` in longhand.
 
 ```agda
--- Your code goes here
+seven : ℕ
+seven = suc (suc (suc (suc (suc (suc (suc zero))))))
 ```
 
 You will need to give both a type signature and definition for the
@@ -439,7 +440,24 @@ other word for evidence, which we will use interchangeably, is _proof_.
 Compute `3 + 4`, writing out your reasoning as a chain of equations, using the equations for `+`.
 
 ```agda
--- Your code goes here
++-example =
+  begin
+    3 + 4
+  ≡⟨⟩
+    suc (2 + 4)
+  ≡⟨⟩
+    suc (suc (1 + 4))
+  ≡⟨⟩
+    suc (suc (suc (0 + 4)))
+  ≡⟨⟩
+    suc (suc (suc 4))
+  ≡⟨⟩
+    suc (suc 5)
+  ≡⟨⟩
+    suc 6
+  ≡⟨⟩
+    7
+  ∎
 ```
 
 
@@ -501,7 +519,20 @@ Compute `3 * 4`, writing out your reasoning as a chain of equations, using the e
 (You do not need to step through the evaluation of `+`.)
 
 ```agda
--- Your code goes here
+*-example =
+  begin
+    3 * 4
+  ≡⟨⟩
+    4 + (2 * 4)
+  ≡⟨⟩
+    4 + (4 + (1 * 4))
+  ≡⟨⟩
+    4 + (4 + (4 + (0 * 4)))
+  ≡⟨⟩
+    4 + (4 + (4 + 0))
+  ≡⟨⟩
+    12
+  ∎
 ```
 
 
@@ -515,7 +546,31 @@ Define exponentiation, which is given by the following equations:
 Check that `3 ^ 4` is `81`.
 
 ```agda
--- Your code goes here
+_^_ : ℕ → ℕ → ℕ
+m ^ 0        =  1
+m ^ (suc n)  =  m * (m ^ n)
+
+_ =
+  begin
+    3 ^ 4
+  ≡⟨⟩
+    3 * (3 ^ 3)
+  ≡⟨⟩
+    3 * (3 * (3 ^ 2))
+  ≡⟨⟩
+    3 * (3 * (3 * (3 ^ 1)))
+  ≡⟨⟩
+    3 * (3 * (3 * (3 * (3 ^ 0))))
+  ≡⟨⟩
+    3 * (3 * (3 * (3 * 1)))
+  ≡⟨⟩
+    9 * 9
+  -- ≡⟨⟩
+  --   (10 - 1) * 9 -- So this won't work cause we don't have _-_ defined.
+                    -- and like _/_ it probably needs a nonzero proof.
+  ≡⟨⟩
+    81
+  ∎
 ```
 
 
@@ -598,7 +653,31 @@ Section [Logical Connectives](/Decidable/#logical-connectives).
 Compute `5 ∸ 3` and `3 ∸ 5`, writing out your reasoning as a chain of equations.
 
 ```agda
--- Your code goes here
+_ =
+  begin
+    5 ∸ 3
+  ≡⟨⟩
+    4 ∸ 2
+  ≡⟨⟩
+    3 ∸ 1
+  ≡⟨⟩
+    2 ∸ 0 -- Zero is on the LHS, all good!
+  ≡⟨⟩
+    2
+  ∎
+  
+_ =
+  begin
+    3 ∸ 5
+  ≡⟨⟩
+    2 ∸ 4
+  ≡⟨⟩
+    1 ∸ 3
+  ≡⟨⟩
+    0 ∸ 2 -- Zero is on the RHS. Ok, this is monus specific territory!
+  ≡⟨⟩
+    0
+  ∎
 ```
 
 
@@ -923,7 +1002,7 @@ Hence, eleven is also represented by `001011`, encoded as:
     ⟨⟩ O O I O I I
 
 Define a function
-
+:ta
     inc : Bin → Bin
 
 that converts a bitstring to the bitstring for the next higher
@@ -944,9 +1023,102 @@ For the former, choose the bitstring to have no leading zeros if it
 represents a positive natural, and represent zero by `⟨⟩ O`.
 Confirm that these both give the correct answer for zero through four.
 
+##### Jack Notes
+
+The Full Adder Truth Table is:
+
+    Inputs 	Outputs
+    A 	B 	Cin 	Cout 	S
+    0 	0 	0 	0 	0
+    0 	0 	1 	0 	1
+    0 	1 	0 	0 	1
+    0 	1 	1 	1 	0
+    1 	0 	0 	0 	1
+    1 	0 	1 	1 	0
+    1 	1 	0 	1 	0
+    1 	1 	1 	1 	1
+
+
+But in this case we're doing an inc, so in the base case Cin is 1, otherwise 0. And A is the input, and B is always zero. So the simplified truth table is:
+
+    Inputs 	Outputs
+    A 	B 	Cin 	Cout 	S
+    0 	0 	0 	0 	0
+    0 	0 	1 	0 	1
+    1 	0 	0 	0 	1
+    1 	0 	1 	1 	0
+
+Well this really is the half adder, where B is Cin and A is the input:
+
+    Inputs 	Outputs
+    A 	B 	Cout 	S
+    0 	0 	0 	0
+    0 	1 	0 	1
+    1 	0 	0 	1
+    1 	1 	1 	0
+
+I think we need an inc helper to carry the carry
+
 ```agda
--- Your code goes here
+data _×_ (A B : Set) : Set where
+  <_,_> : A -> B -> A × B
+
+fst : {A B : Set} -> A × B -> A
+fst < x , y > = x
+
+snd : {A B : Set} -> A × B -> B
+snd < x , y > = y
+
+data Bit : Set where
+  bit-o : Bit
+  bit-i : Bit
+
+inc-helper : Bin → Bit → (Bin × Bit)
+inc-helper ⟨⟩ bit-o = < ⟨⟩ , bit-o > -- Non-Rollover Base Case
+inc-helper (i O) bit-o = < (fst (inc-helper i bit-o)) O , bit-o >
+inc-helper (i I) bit-o = < (fst (inc-helper i bit-o)) I , bit-o >
+inc-helper ⟨⟩ bit-i = < (⟨⟩ I) , bit-o > -- Rollover Base Case
+inc-helper (i O) bit-i = < (fst (inc-helper i bit-o)) I , bit-o >
+inc-helper (i I) bit-i = < (fst (inc-helper i bit-i)) O , bit-o >
+
+inc : Bin → Bin
+inc i = fst (inc-helper i bit-i)
+
+_ = begin
+    (inc (⟨⟩ O))
+  ≡⟨⟩
+    (⟨⟩ I)
+  ∎
+
+_ = begin
+    (inc (⟨⟩ I))
+  ≡⟨⟩
+    (⟨⟩ I O)
+  ∎
+
+_ = begin
+    (inc (⟨⟩ I O))
+  ≡⟨⟩
+    (⟨⟩ I I)
+  ∎
+  
+_ = begin
+    (inc (⟨⟩ I I))
+  ≡⟨⟩
+    (⟨⟩ I O O)
+  ∎
+
+_ = begin
+    inc (⟨⟩ I O I I)
+  ≡⟨⟩
+    ⟨⟩ I I O O
+  ∎
 ```
+
+to   : ℕ → Bin
+from : Bin → ℕ
+
+*END OF STUFF YOU GOTTA DEFINE TO FINISH EXERCIZE!!*
 
 
 ## Standard library
