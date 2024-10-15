@@ -75,9 +75,14 @@ Give another example of a pair of operators that have an identity
 and are associative, commutative, and distribute over one another.
 (You do not have to prove these properties.)
 
+JACK: Boolean And an Or. Both have identity (Or is 0, And is 1), are associative when one is on it's own, the are comutative, and And distrubutes over Or.
+
 Give an example of an operator that has an identity and is
 associative but is not commutative.
 (You do not have to prove these properties.)
+
+JACK: Exponentiation has identity, but is it associative? Consider 2 ^ (3 ^ 2) = 512, where (2 ^ 3) ^ 2 = 64, so it is not associative.
+JACK: Ok, easy, string concatenation has identity (the empty string), it is associative (doesn't matter which order string concatenations are evaluated), but is not comutative (order of strings does matter).
 
 
 ## Associativity
@@ -357,6 +362,24 @@ proof of associativity.
   ∎
 ```
 
+### JACK: Comparing/Contrasting "A Taste of Agda" (hereafter ATOA) Associativity proof
+
+[Source of this proof](https://agda.readthedocs.io/en/latest/getting-started/a-taste-of-agda.html#agda-as-a-proof-assistant-proving-associativity-of-addition)
+
+```agda
+atoa-+-assoc-proof : ∀ (x y z : ℕ) → x + (y + z) ≡ (x + y) + z
+atoa-+-assoc-proof zero y z = refl
+atoa-+-assoc-proof (suc x) y z = cong suc (atoa-+-assoc-proof x y z)
+```
+
+The key parts of this proof are identical to PLFA's proof, however it is presented without the chain of reasoning. In these identical parts, the `cong` aspect makes perfect sense to me, it applies `suc` to both sides of the equality return type of `atoa-+-assoc-proof` in order to seal the inductive case. However, `refl` does not make as much sense to me, but perhaps I just have not really thought it through the type of `refl` is `x ≡ x`.
+
+Wait, actually the base case is different in the proofs; the ATOA proof uses `refl` where PLFA uses a chain or reasoning to demonstrate equality. If I replace `refl` with a hole, the hole has type `zero + (y + z) ≡ zero + y + z`. I don't get how refl works it's magic. A bit of internet searching lead to the discovery that Equality is just two chapters ahead in this book, so I will table my concerns with `refl` till then.
+
+Obviously the chain of reasoning approach is good for didactic and exploratory cases, but how does it really work? At first I was annoyed to find that if I stick a hole in the chain or reasoning for `+-assoc-proof` the type is ℕ, which lead me to wonder if it only cared about the type, so I stuck 1 in place of the hole, and happily discovered that after checking type Agda checks that the value is indeed equivalent.
+
+Is this associativity proof then contrived? Associativity is built into Agda; we define the associativity of operators when we define them (if not satisfied with the default associativity). I suppose it is not entirely contrived, if one was wildly mistaken and attempted to prove that associativity worked differently the proof would fail.
+
 
 ## Terminology and notation
 
@@ -432,6 +455,15 @@ Here is the lemma's statement and proof:
     suc m
   ∎
 ```
+
+JACK: Can we do this in non-chain-of-reasoning form?
+```agda
+ncof-+-identityʳ : ∀ (m : ℕ) → m + zero ≡ m
+ncof-+-identityʳ zero = refl
+ncof-+-identityʳ (suc m) = cong suc (ncof-+-identityʳ m)
+```
+JACK:Yep! Easy, but I still don't get `refl`, I'll hold out for the chapter after next...
+
 The signature states that we are defining the identifier `+-identityʳ` which
 provides evidence for the proposition:
 
@@ -503,6 +535,15 @@ Here is the lemma's statement and proof:
     suc (suc m + n)
   ∎
 ```
+
+JACK: Can we do this in non-chain-of-reasoning form?
+```agda
+ncof-+-suc : ∀ (m n : ℕ) → m + suc n ≡ suc (m + n)
+ncof-+-suc zero n = refl
+ncof-+-suc (suc m) n = cong suc (ncof-+-suc m n)
+```
+JACK: Ok, no need to repeat this exercise every time... Thinking about `refl` more, it seems to be able to be used in places where it is trivial to check that substituation of a given value will yeild identical values, i.e. `+-suc zero n`.
+
 The signature states that we are defining the identifier `+-suc` which provides
 evidence for the proposition:
 
@@ -681,7 +722,7 @@ rule doesn't give us any new judgments:
     -- On the first day, we know about associativity of 0.
     (0 + 0) + 0 ≡ 0 + (0 + 0)   ...   (0 + 4) + 5 ≡ 0 + (4 + 5)   ...
 
-Then we repeat the process, so on the next day we know about all the
+ehen ie repeat the process, so on the next day we know about all the
 judgments from the day before, plus any judgments added by the rules.
 The base case tells us nothing new, but now the inductive case adds
 more judgments:
@@ -718,7 +759,7 @@ first four days using a finite story of creation, as
 [earlier](/Naturals/#finite-creation).
 
 ```agda
--- Your code goes here
+-- Going to skip this one, don't think enumerationg these cases will be a boon to my understanding.
 ```
 
 ## Associativity with rewrite
@@ -729,6 +770,9 @@ equations:
 ```agda
 +-assoc′ : ∀ (m n p : ℕ) → (m + n) + p ≡ m + (n + p)
 +-assoc′ zero    n p                          =  refl
+--Playing with figuring how this works...
+--+-assoc′ (suc m) n p                          = {!!}
+--+-assoc′ (suc m) n p  rewrite +-assoc′ m n p  = {!!}
 +-assoc′ (suc m) n p  rewrite +-assoc′ m n p  =  refl
 ```
 
@@ -890,7 +934,19 @@ just apply the previous results which show addition
 is associative and commutative.
 
 ```agda
--- Your code goes here
++-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap m n p =
+  begin
+    m + (n + p)
+  ≡⟨ sym (+-assoc m n p) ⟩
+    m + n + p
+  ≡⟨⟩
+    (m + n) + p
+  ≡⟨ cong (_+ p) (+-comm m n) ⟩
+    (n + m) + p
+  ≡⟨ +-assoc n m p ⟩
+    n + (m + p)
+  ∎
 ```
 
 
@@ -903,7 +959,28 @@ Show multiplication distributes over addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+ zero n p = refl
+*-distrib-+ (suc m) n p =
+  begin
+    ((suc m) + n) * p
+  ≡⟨⟩
+    (suc (m + n)) * p
+  ≡⟨⟩
+    p + ((m + n) * p)
+  ≡⟨ cong (p +_) (*-distrib-+ m n p) ⟩
+    p + (m * p + n * p)
+  ≡⟨⟩
+    p + ((m * p) + (n * p))
+  ≡⟨ sym (+-assoc p (m * p) (n * p)) ⟩
+    p + (m * p) + (n * p)
+  ≡⟨⟩
+    (p + m * p) + n * p
+  ≡⟨⟩
+    (suc m * p) + n * p
+  ≡⟨⟩
+    (suc m) * p + n * p
+  ∎
 ```
 
 
@@ -916,7 +993,20 @@ Show multiplication is associative, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p =
+  begin
+    ((suc m) * n) * p
+  ≡⟨⟩
+    (n + m * n) * p
+  ≡⟨ *-distrib-+ n (m * n) p ⟩
+    (n * p) + (m * n) * p
+  ≡⟨ cong ((n * p) +_) (*-assoc m n p) ⟩
+    (n * p) + m * (n * p)
+  ≡⟨⟩
+    (suc m) * (n * p)
+  ∎
 ```
 
 
@@ -930,7 +1020,55 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 ```agda
--- Your code goes here
+--*-identity⃖ : ∀ (m : ℕ) → (suc zero) * m ≡ m 
+--*-identity⃖ m =
+--  begin
+--    (suc zero) * m
+--  ≡⟨⟩
+--    m + zero * m
+--  ≡⟨⟩
+--    m + zero
+--  ≡⟨ +-comm m zero ⟩
+--    zero + m
+--  ≡⟨⟩
+--    m
+--  ∎
+
+*-zeroʳ : ∀ (n : ℕ) → n * zero ≡ zero
+*-zeroʳ zero = refl
+*-zeroʳ (suc n) = cong (zero +_) (*-zeroʳ n)
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm zero n = sym (*-zeroʳ n)
+*-comm (suc m) zero = cong (zero +_) (*-comm m zero)
+*-comm (suc m) (suc n) = 
+  begin
+    (suc m) * (suc n)
+  ≡⟨⟩
+    (suc n) + m * (suc n)
+  ≡⟨ cong ((suc n) +_) (*-comm m (suc n)) ⟩
+    (suc n) + (suc n) * m
+  ≡⟨⟩
+    (suc n) + (m + n * m)
+  ≡⟨ sym (+-assoc (suc n) m (n * m)) ⟩
+    (suc n) + m + n * m
+  ≡⟨⟩
+    1 + (n + m) + n * m
+  ≡⟨ cong (1 +_) (cong (_+ n * m) (+-comm n m)) ⟩
+    1 + (m + n) + n * m
+  ≡⟨ cong (1 + (m + n) +_) (*-comm n m) ⟩
+    1 + (m + n) + m * n
+  ≡⟨⟩
+    (suc m) + n + m * n
+  ≡⟨ +-assoc (suc m) n (m * n) ⟩
+    (suc m) + (n + m * n)
+  ≡⟨⟩
+    (suc m) + (suc m) * n
+  ≡⟨ cong ((suc m) +_) (*-comm (suc m) n) ⟩
+    (suc m) + n * (suc m)
+  ≡⟨⟩
+    (suc n) * (suc m)
+  ∎
 ```
 
 
