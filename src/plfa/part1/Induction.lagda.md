@@ -1020,20 +1020,6 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 ```agda
---*-identity⃖ : ∀ (m : ℕ) → (suc zero) * m ≡ m 
---*-identity⃖ m =
---  begin
---    (suc zero) * m
---  ≡⟨⟩
---    m + zero * m
---  ≡⟨⟩
---    m + zero
---  ≡⟨ +-comm m zero ⟩
---    zero + m
---  ≡⟨⟩
---    m
---  ∎
-
 *-zeroʳ : ∀ (n : ℕ) → n * zero ≡ zero
 *-zeroʳ zero = refl
 *-zeroʳ (suc n) = cong (zero +_) (*-zeroʳ n)
@@ -1081,8 +1067,17 @@ Show
 for all naturals `n`. Did your proof require induction?
 
 ```agda
--- Your code goes here
+∸-zero : ∀ (n : ℕ) → zero ∸ n ≡ zero
+∸-zero zero = refl 
+∸-zero (suc n) = refl
 ```
+JACK:
+This didn't require induction because if follows directly
+from the definition of Monus, so we can use use `refl`...
+Or so it would seem... In fact the definition of monus that
+matches the `refl` in the `(suc n)` case is recursively
+defined, therefore this proof actually does use induction.
+
 
 
 #### Exercise `∸-+-assoc` (practice) {#monus-plus-assoc}
@@ -1094,7 +1089,30 @@ Show that monus associates with addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+∸-+-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc m zero p = refl
+∸-+-assoc zero (suc n) p =
+  begin
+    (zero ∸ (suc n)) ∸ p
+  ≡⟨⟩
+    zero ∸ p
+  ≡⟨ ∸-zero p ⟩
+    zero
+  ≡⟨ ∸-zero ((suc n) + p) ⟩
+    zero ∸ ((suc n) + p)
+  ∎
+∸-+-assoc (suc m) (suc n) p =
+  begin
+    ((suc m) ∸ (suc n)) ∸ p
+  ≡⟨ refl ⟩
+    (m ∸ n) ∸ p
+  ≡⟨ ∸-+-assoc m n p ⟩
+    m ∸ (n + p)
+  ≡⟨ refl ⟩
+    (suc m) ∸ suc (n + p)
+  ≡⟨⟩
+    (suc m) ∸ ((suc n) + p)
+  ∎
 ```
 
 
@@ -1109,8 +1127,142 @@ Show the following three laws
 for all `m`, `n`, and `p`.
 
 ```
--- Your code goes here
+*-identityʳ : ∀ (n : ℕ) → n * 1 ≡ n
+*-identityʳ zero = refl
+*-identityʳ (suc n) = cong (1 +_) (*-identityʳ n)
+
+^-distribˡ-+-* : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+^-distribˡ-+-* m n zero =
+  begin
+    m ^ (n + zero)
+  ≡⟨ cong (m ^_) (+-identityʳ n) ⟩
+    m ^ n
+  ≡⟨ sym (*-identityʳ (m ^ n))⟩
+    (m ^ n) * 1
+  ≡⟨⟩
+    (m ^ n) * (m ^ zero)
+  ∎
+^-distribˡ-+-* m n (suc p) =
+  begin
+    m ^ (n + (suc p))
+  ≡⟨ cong (m ^_) (+-comm n (suc p)) ⟩
+    m ^ ((suc p) + n)
+  ≡⟨⟩
+    m ^ suc (p + n)
+  ≡⟨⟩
+    m * (m ^ (p + n))
+  ≡⟨ cong (m *_) (^-distribˡ-+-* m p n) ⟩
+    m * (m ^ p * m ^ n)
+  ≡⟨ sym (*-assoc m (m ^ p) (m ^ n)) ⟩
+    (m * m ^ p) * (m ^ n)
+  ≡⟨ *-comm (m * m ^ p) (m ^ n) ⟩
+    (m ^ n) * (m * m ^ p)
+  ≡⟨ cong ((m ^ n) *_) refl ⟩
+    (m ^ n) * (m ^ (suc p))
+  ∎
+
+-- trying an alternate approach
+*-identity⃖ : ∀ (m : ℕ) → (suc zero) * m ≡ m
+*-identity⃖ m =
+  begin
+    (suc zero) * m
+  ≡⟨⟩
+    m + zero * m
+  ≡⟨⟩
+    m + zero
+  ≡⟨ +-comm m zero ⟩
+    zero + m
+  ≡⟨⟩
+    m
+  ∎
+
+^-distribˡ-+-*‵ : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+^-distribˡ-+-*‵ m zero p =
+  begin
+    m ^ (zero + p)
+  ≡⟨⟩
+    m ^ p
+  ≡⟨ sym (*-identity⃖ (m ^ p)) ⟩
+    1 * (m ^ p)
+  ≡⟨⟩
+    (m ^ zero) * (m ^ p)
+  ∎
+
+^-distribˡ-+-*‵ m (suc n) p =
+  begin
+    m ^ ((suc n) + p)
+  ≡⟨⟩
+    m ^ suc (n + p)
+  ≡⟨⟩
+    m * m ^ (n + p)
+  ≡⟨ cong (m *_) (^-distribˡ-+-*‵ m n p) ⟩
+    m * (m ^ n * m ^ p)
+  ≡⟨ sym (*-assoc m (m ^ n) (m ^ p)) ⟩
+    (m * m ^ n) * (m ^ p)
+  ≡⟨⟩
+    (m ^ (suc n)) * (m ^ p)
+  ∎
+
+-- splitting on n instead of m is slightly more concise, if we take the left identity for granted
+
+^-distribʳ-* : ∀ (m n p : ℕ) → (m * n) ^ p ≡ (m ^ p) * (n ^ p)
+^-distribʳ-* m n zero = refl
+^-distribʳ-* m n (suc p) =
+  begin
+    (m * n) ^ (suc p)
+  ≡⟨⟩
+    (m * n) * (m * n) ^ p
+  ≡⟨ cong ((m * n) *_) (^-distribʳ-* m n p) ⟩
+    (m * n) * ((m ^ p) * (n ^ p))
+  ≡⟨ *-assoc m n ((m ^ p) * (n ^ p)) ⟩
+    m * (n * ((m ^ p) * (n ^ p)))
+  ≡⟨ cong (m *_) (sym (*-assoc n (m ^ p) (n ^ p))) ⟩
+    m * ((n * (m ^ p)) * (n ^ p))
+  ≡⟨ cong (m *_) (cong (_* (n ^ p)) (*-comm n (m ^ p))) ⟩
+    m * (((m ^ p) * n) * (n ^ p))
+  ≡⟨ cong (m *_) (*-assoc (m ^ p) n (n ^ p)) ⟩
+    m * ((m ^ p) * (n * (n ^ p)))
+  ≡⟨ sym (*-assoc m (m ^ p) (n * n ^ p)) ⟩
+    (m * (m ^ p)) * (n * n ^ p)
+  ≡⟨⟩
+    (m ^ (suc p)) * (n ^ (suc p))
+  ∎
+
+^-*-assoc : ∀ (m n p : ℕ) → (m ^ n) ^ p ≡ m ^ (n * p)
+^-*-assoc m n zero =
+  begin
+    (m ^ n) ^ zero
+  ≡⟨⟩
+    1
+  ≡⟨⟩
+    m ^ zero
+  ≡⟨ cong (m ^_) (sym (*-zeroʳ n))⟩
+    m ^ (n * zero)
+  ∎
+^-*-assoc m n (suc p) =
+  begin
+    (m ^ n) ^ (suc p)
+  ≡⟨⟩
+    (m ^ n) * (m ^ n) ^ p
+  ≡⟨ cong ((m ^ n) *_) (^-*-assoc m n p) ⟩
+    (m ^ n) * m ^ (n * p)
+  ≡⟨ cong ((m ^ n) *_) (cong (m ^_) (*-comm n p)) ⟩
+    (m ^ n) * m ^ (p * n)
+  ≡⟨ sym (^-distribˡ-+-* m n (p * n)) ⟩
+    m ^ (n + (p * n))
+  ≡⟨ cong (m ^_) (cong (_+ p * n) (sym (*-identity⃖ n))) ⟩
+    m ^ (1 * n + p * n)
+  ≡⟨ cong (m ^_) (sym (*-distrib-+ 1 p n)) ⟩
+    m ^ ((1 + p) * n)
+  ≡⟨ cong (m ^_) (*-comm (1 + p) n) ⟩
+    m ^ (n * (1 + p))
+  ≡⟨⟩
+    m ^ (n * (suc p))
+  ∎
 ```
+  begin
+  ≡⟨⟩
+  ∎
 
 
 #### Exercise `Bin-laws` (stretch) {#Bin-laws}
@@ -1134,7 +1286,7 @@ over bitstrings:
 For each law: if it holds, prove; if not, give a counterexample.
 
 ```agda
--- Your code goes here
+-- JACK: Going to skip this one, I think I've got the idea.
 ```
 
 
