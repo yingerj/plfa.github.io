@@ -95,7 +95,6 @@ _ = s≤s (s≤s z≤n)
 
 
 
-
 ## Implicit arguments
 
 This is our first use of implicit arguments.  In the definition of
@@ -243,13 +242,75 @@ partial order but not a total order.
 Give an example of a preorder that is not a partial order.
 
 ```agda
--- Your code goes here
+-- The example of "Divides" from the Perorder page on Wikipedia may be a
+-- a preorder on Integres but no on ℕ since negation is not available,
+-- therfore it is really a partial order. I'm going to be satisfied with
+-- this and skip coding up divides for integers since the emphasis is on
+-- ℕ in Agda, or so it seems.
 ```
 
 Give an example of a partial order that is not a total order.
 
 ```agda
--- Your code goes here
+-- The aformentioned "Divides" relationship for ℕ is a good example.
+-- Taking for granted the Preorder Wikipedia page's treatment of
+-- reflexive and transative properties (which are actually not directly
+-- addressed), Divides does have anti-symetry, but not totality.
+-- Let's define division such that the result is boolean, where either one
+-- number evenly divides another or not. Because n can only divide m evenly
+-- if n ≤ m, it cannot be that m also divides n unless m = n (this
+-- reasoning is not as tight as it could be?), therfore Divides is
+-- antisymetric. Now, it is not transitive because for numbers that are not
+-- evenly divisible neithergg n divides m or m divides n hold. Perhaps the
+-- trouble with these phrasings of proof are that the exclude the
+-- posibility rather than construct the existence, as has been the approach
+-- all along in this book. Ok, let's give it a go:
+
+data Divides : ℕ → ℕ → Set where
+
+  -- In this definition of Divides n is not divisible by 1 (in general)
+
+  divides-base : ∀ {n : ℕ}
+      --------
+    → Divides (suc n) (suc n)
+
+  divides-induct : ∀ {n m : ℕ}
+    → Divides (suc n) m
+      --------
+    → Divides (suc n) (m + (suc n))
+
+  -- This defninition of Divides has some problems:
+  -- It builds up inductive chains of divisibility, but has no way
+  -- to relate across them? Say Divides 1 2 and Divides 2 4, how can it
+  -- be proven that Divides 1 4? Seems like there needs to be a way to relate
+  -- across chains. Could this be solved by a 3 function inductive definition
+  -- instead of the current 2 function?
+
+
+-- Now proove it:
+
+Divides-refl : ∀ {n : ℕ}
+    -----
+  → Divides (suc n) (suc n)
+
+Divides-refl = divides-base
+
+Divides-trans :  ∀ {m n p : ℕ}
+  → Divides m n
+  → Divides n p
+    -----
+  → Divides m p
+
+Divides-trans divides-base np = {!!}
+Divides-trans (divides-induct mn) np = {!!}
+
+--Divides-antisym : ∀ {m n : ℕ}
+--  → Divides m n
+--  → Divides n m
+--    -----
+--  → m ≡ n
+
+-- Haven't yet come across proof of nonexistence in Agda, does it exist?
 ```
 
 ## Reflexivity
@@ -362,7 +423,14 @@ The above proof omits cases where one argument is `z≤n` and one
 argument is `s≤s`.  Why is it ok to omit them?
 
 ```agda
--- Your code goes here
+-- This case can be omited because the dependent typing excludes them? 
+-- Or is it that the definition of ≤-antisym entails that these cases do not exist because they start from the base case and build on top of it?
+-- Unlike the definition of ≤ the definition of ≤-antisym has explicit arguments.
+-- Though, suc in ℕ has an explicit argument and the base case of zero works with suc to construct the Set of ℕ.
+-- In ≤ the constructor z≤n has no explicit argument.
+-- It seems like this property could be used to select z≤s as the base case?
+-- Turns out interactively defining ≤-antisym, exactly this happens when case splitting.
+-- Hmm, the ability of Agda filling in the second z≤n causes me to wonder about my initial exclusion hypothesis again, it had to be able to exclude the s≤s case to make that decision.
 ```
 
 
@@ -600,7 +668,9 @@ Show that strict inequality is transitive. Use a direct proof. (A later
 exercise exploits the relation between < and ≤.)
 
 ```agda
--- Your code goes here
+<-trans : ∀ {m n p : ℕ} → m < (suc n) → (suc n) < (suc p) → m < (suc p)
+<-trans z<s       _               = z<s
+<-trans (s<s m<n) (s<s (s<s n<p)) = s<s (<-trans m<n (s<s n<p))
 ```
 
 #### Exercise `trichotomy` (practice) {#trichotomy}
@@ -635,7 +705,13 @@ As with inequality, some additional definitions may be required.
 Show that `suc m ≤ n` implies `m < n`, and conversely.
 
 ```agda
--- Your code goes here
+≤→< : ∀ {m n : ℕ} → (suc m) ≤ n → m < n
+≤→< (s≤s z≤n) = z<s
+≤→< (s≤s (s≤s le)) = s<s (≤→< (s≤s le))
+
+<→≤ : ∀ {m n : ℕ} →  m < n → (suc m) ≤ n
+<→≤ z<s = s≤s z≤n
+<→≤ (s<s lt) = s≤s (<→≤ lt)
 ```
 
 #### Exercise `<-trans-revisited` (practice) {#less-trans-revisited}
@@ -752,7 +828,15 @@ successor of the sum of two even numbers, which is even.
 Show that the sum of two odd numbers is even.
 
 ```agda
--- Your code goes here
+o+o=e : ∀ {m n : ℕ}
+  → odd m
+  → odd n
+    -----------
+  → even (m + n)
+
+o+o=e (suc zero) (suc zero) = suc (suc zero)
+o+o=e (suc zero) (suc (suc x)) = suc (suc (o+o=e (suc zero) x))
+o+o=e (suc (suc x)) ob = suc (suc (o+o=e x ob))
 ```
 
 #### Exercise `Bin-predicates` (stretch) {#Bin-predicates}
