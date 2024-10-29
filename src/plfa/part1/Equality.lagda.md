@@ -186,7 +186,6 @@ named `≡-Reasoning`, to match the format used in Agda's standard
 library:
 ```agda
 module ≡-Reasoning {A : Set} where
-
   infix  1 begin_
   infixr 2 step-≡-∣ step-≡-⟩
   infix  3 _∎
@@ -290,7 +289,8 @@ definition for trans. Can you see why? (Hint: look at the definition
 of `_≡⟨_⟩_`)
 
 ```agda
--- Your code goes here
+-- Because `step-≡-⟩` uses `trans` in its definition! It would be circular
+-- to use `trans'` to define `step-≡-⟩` so Agda chokes on it.
 ```
 
 ## Chains of equations, another example
@@ -378,7 +378,126 @@ it to write out an alternative proof that addition is monotonic with
 regard to inequality.  Rewrite all of `+-monoˡ-≤`, `+-monoʳ-≤`, and `+-mono-≤`.
 
 ```agda
--- Your code goes here
+-- Coppied definitions from Relations:
+infix 4 _≤_
+data _≤_ : ℕ → ℕ → Set where
+
+  z≤n : ∀ {n : ℕ}
+      --------
+    → zero ≤ n
+
+  s≤s : ∀ {m n : ℕ}
+    → m ≤ n
+      -------------
+    → suc m ≤ suc n
+
+≤-refl : ∀ {n : ℕ}
+    -----
+  → n ≤ n
+≤-refl {zero} = z≤n
+≤-refl {suc n} = s≤s ≤-refl
+
+≤-trans : ∀ {m n p : ℕ}
+  → m ≤ n
+  → n ≤ p
+    -----
+  → m ≤ p
+≤-trans z≤n       _          =  z≤n
+≤-trans (s≤s m≤n) (s≤s n≤p)  =  s≤s (≤-trans m≤n n≤p)
+
+-- ≤-ification of ≡-Reasoning
+module ≤-Reasoning where
+
+  infix  1 ≤-begin_
+  infixr 2 step-≤-∣ step-≤-⟩
+  infix  3 _≤-∎
+
+  ≤-begin_ : ∀ {x y : ℕ} → x ≤ y → x ≤ y
+  ≤-begin x≤y  =  x≤y
+
+  step-≤-∣ : ∀ (x : ℕ) {y : ℕ} → x ≤ y → x ≤ y
+  step-≤-∣ x x≤y  =  x≤y
+
+  step-≤-⟩ : ∀ (x : ℕ) {y z : ℕ} → y ≤ z → x ≤ y → x ≤ z
+  step-≤-⟩ x y≤z x≤y  =  ≤-trans x≤y y≤z
+
+  syntax step-≤-∣ x x≤y      =  x ≤⟨⟩ x≤y
+  syntax step-≤-⟩ x y≤z x≤y  =  x ≤⟨  x≤y ⟩ y≤z
+
+  _≤-∎ : ∀ (x : ℕ) → x ≤ x
+  x ≤-∎  =  ≤-refl
+
+open ≤-Reasoning
+
++-monoʳ-≤ : ∀ (n p q : ℕ)
+  → p ≤ q
+    -------------
+  → n + p ≤ n + q
++-monoʳ-≤ zero p q p≤q =
+  ≤-begin
+    zero + p
+  ≤⟨ p≤q ⟩
+    zero + q
+  ≤-∎
++-monoʳ-≤ (suc n) p q p≤q =
+  ≤-begin
+    (suc n) + p
+  ≤⟨ s≤s (+-monoʳ-≤ n p q p≤q) ⟩
+    (suc n) + q
+  ≤-∎
+
++-identity-≤ : ∀ (m : ℕ) → m + zero ≤ m
++-identity-≤ zero = ≤-refl
++-identity-≤ (suc m) =
+  ≤-begin
+    (suc m) + zero
+  ≤⟨ s≤s (+-identity-≤ m) ⟩
+    (suc m)
+  ≤-∎
+
+-- Could you use `rewrite` instead of this seemingly redundant definition?
++-identityˡ-≤ : ∀ (m : ℕ) → m ≤ m + zero
++-identityˡ-≤ zero = ≤-refl
++-identityˡ-≤ (suc m) =
+  ≤-begin
+    (suc m)
+  ≤⟨ s≤s (+-identityˡ-≤ m) ⟩
+    (suc m) + zero
+  ≤-∎
+
++-monoˡ-≤ : ∀ (m n p : ℕ)
+  → m ≤ n
+    -------------
+  → m + p ≤ n + p
++-monoˡ-≤ m n zero m≤n =
+  ≤-begin
+    m + zero
+  ≤⟨ +-identity-≤ m ⟩
+    m
+  ≤⟨ m≤n ⟩
+    n
+  ≤⟨ +-identityˡ-≤ n ⟩
+    n + zero
+  ≤-∎
++-monoˡ-≤ m n (suc p) m≤n =
+  ≤-begin
+    m + (suc p)
+  ≤⟨ {!!} ⟩ -- How can you inject equality in here?
+    suc (m + p)
+  ≤⟨ s≤s (+-monoˡ-≤ m n p m≤n) ⟩
+    suc (n + p)
+  ≤⟨ {!!} ⟩ -- How can you inject equality in here?
+    n + (suc p)
+  ≤-∎
+
+-- +-monoˡ-≤ m n p m≤n rewrite +-comm m p | +-comm n p  = +-monoʳ-≤ p m n m≤n
+
+-- +-mono-≤ : ∀ (m n p q : ℕ)
+--   → m ≤ n
+--   → p ≤ q
+--     -------------
+--   → m + p ≤ n + q
+-- +-mono-≤ m n p q m≤n p≤q  =  ≤-trans (+-monoˡ-≤ m n p m≤n) (+-monoʳ-≤ n p q p≤q)
 ```
 
 
