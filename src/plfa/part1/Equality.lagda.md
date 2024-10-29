@@ -455,7 +455,8 @@ open ≤-Reasoning
     (suc m)
   ≤-∎
 
--- Could you use `rewrite` instead of this seemingly redundant definition?
+-- I think rewrite could be used here if it were to be defined for ≤ instead of
+-- or in addition to ≡.
 +-identityˡ-≤ : ∀ (m : ℕ) → m ≤ m + zero
 +-identityˡ-≤ zero = ≤-refl
 +-identityˡ-≤ (suc m) =
@@ -464,6 +465,14 @@ open ≤-Reasoning
   ≤⟨ s≤s (+-identityˡ-≤ m) ⟩
     (suc m) + zero
   ≤-∎
+
+-- These are trivial to proove and I don't think I'd learn much from proving them.
+-- It seems like there ought to be a nice way to handle these cases where the two
+-- sides of ≤ are actually ≡, because then properties like `+-suc` could be used
+-- rather than being virtually redefined in a new context.
+postulate
+  +-suc-≤ : ∀ (m n : ℕ) → m + (suc n) ≤ suc (m + n)
+  +-sucˡ-≤ : ∀ (m n : ℕ) → suc (m + n) ≤ m + (suc n)
 
 +-monoˡ-≤ : ∀ (m n p : ℕ)
   → m ≤ n
@@ -482,22 +491,27 @@ open ≤-Reasoning
 +-monoˡ-≤ m n (suc p) m≤n =
   ≤-begin
     m + (suc p)
-  ≤⟨ {!!} ⟩ -- How can you inject equality in here?
+  ≤⟨ +-suc-≤ m p ⟩
     suc (m + p)
   ≤⟨ s≤s (+-monoˡ-≤ m n p m≤n) ⟩
     suc (n + p)
-  ≤⟨ {!!} ⟩ -- How can you inject equality in here?
+  ≤⟨ +-sucˡ-≤ n p ⟩
     n + (suc p)
   ≤-∎
 
--- +-monoˡ-≤ m n p m≤n rewrite +-comm m p | +-comm n p  = +-monoʳ-≤ p m n m≤n
-
--- +-mono-≤ : ∀ (m n p q : ℕ)
---   → m ≤ n
---   → p ≤ q
---     -------------
---   → m + p ≤ n + q
--- +-mono-≤ m n p q m≤n p≤q  =  ≤-trans (+-monoˡ-≤ m n p m≤n) (+-monoʳ-≤ n p q p≤q)
++-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m + p ≤ n + q
++-mono-≤ m n p q m≤n p≤q =
+  ≤-begin
+    m + p
+  ≤⟨ +-monoˡ-≤ m n p m≤n ⟩
+    n + p
+  ≤⟨ +-monoʳ-≤ n p q p≤q ⟩
+    n + q
+  ≤-∎
 ```
 
 
