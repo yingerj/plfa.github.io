@@ -1,15 +1,12 @@
-Scratch: Where I play with things as I go, and copy code as I go so I can easily refrence it when working on exercises.
-
-A trimmed down set of imports:
 ```agda
-module plfa.part1.Induction_Scratch where
+module plfa.part1.Rewrite_Investigation where
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 ```
 
-# Revisting Rewrite
+# Revisting Rewrite coverage in Induction chapter
 
 Rewrite didn't make too much sense to me so going back and playing with it.
 
@@ -98,3 +95,75 @@ Resulting in:
     suc (m + (n + p)) ≡ suc (m + (n + p))
 
 Ok, I think I've got rewrite figured out now.
+
+
+# Rewrite coverage in Equality chapter
+
+Preliminaries coppied from Equality:
+
+```agda
+postulate
+  +-identity : ∀ (m : ℕ) → m + zero ≡ m
+  +-suc : ∀ (m n : ℕ) → m + suc n ≡ suc (m + n)
+  +-comm : ∀ (m n : ℕ) → m + n ≡ n + m
+
+data even : ℕ → Set
+data odd  : ℕ → Set
+
+data even where
+
+  even-zero : even zero
+
+  even-suc : ∀ {n : ℕ}
+    → odd n
+      ------------
+    → even (suc n)
+
+data odd where
+  odd-suc : ∀ {n : ℕ}
+    → even n
+      -----------
+    → odd (suc n)
+```
+
+I noticed something that struck me as funny while fiddling with `even-comm`:
+
+```agda
+even-comm : ∀ (m n : ℕ)
+  → even (m + n)
+    ------------
+  → even (n + m)
+even-comm m n ev rewrite +-comm m n = {!!} -- Hole type: even (n + m)
+```
+If we C-c C-, in the hole we get:
+    Goal: even (n + m)
+    ————————————————————————————————————————————————————————————
+    ev : even (n + m)
+    n  : ℕ
+    m  : ℕ
+
+```agda
+even-comm′ : ∀ (m n : ℕ)
+  → even (m + n)
+    ------------
+  → even (n + m)
+even-comm′ m n ev rewrite +-comm n m = {!!} -- Hole type: even (m + n)
+```
+If we C-c C-, in the hole we get:
+    Goal: even (m + n)
+    ————————————————————————————————————————————————————————————
+    ev : even (m + n)
+    n  : ℕ
+    m  : ℕ
+
+```agda
+even-comm″ : ∀ (m n : ℕ)
+  → even (m + n)
+    ------------
+  → even (n + m)
+even-comm″ m n ev = {!!} -- Hole type: even (n + m)
+```
+
+It doesn't matter the order in which m and n are applied to +-comm. Why is that?
+Because rewrite is rewriting `ev` in the `even-comm` case! So it appears that
+rewrite can apply the rewrite function anywhere in the rewrite target's type.
