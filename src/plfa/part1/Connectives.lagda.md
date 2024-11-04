@@ -240,7 +240,20 @@ Show that `A ⇔ B` as defined [earlier](/Isomorphism/#iff)
 is isomorphic to `(A → B) × (B → A)`.
 
 ```agda
--- Your code goes here
+open _⇔_
+
+⇔≃× : ∀ {A B : Set} → A ⇔ B ≃ (A → B) × (B → A)
+⇔≃× =
+  record
+    { to      = λ{ a⇔b → ⟨ to a⇔b , from a⇔b ⟩ }
+    ; from    = λ{ ⟨ ab , ba ⟩ → record
+                                   { to   = ab
+                                   ; from = ba
+                                   }
+                }
+    ; from∘to = λ{ a⇔b         → refl }
+    ; to∘from = λ{ ⟨ ab , ba ⟩ → refl }
+    }
 ```
 
 
