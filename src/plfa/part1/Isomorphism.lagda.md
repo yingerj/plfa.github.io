@@ -436,16 +436,26 @@ open ≲-Reasoning
 #### Exercise `≃-implies-≲` (practice)
 
 Show that every isomorphism implies an embedding.
-```agda
+
 postulate
   ≃-implies-≲ : ∀ {A B : Set}
     → A ≃ B
       -----
     → A ≲ B
-```
+
 
 ```agda
--- Your code goes here
+≃-implies-≲ : ∀ {A B : Set}
+  → A ≃ B
+    -----
+  → A ≲ B
+
+≃-implies-≲ a≃b =
+  record
+    { to      = to a≃b
+    ; from    = from a≃b
+    ; from∘to = from∘to a≃b
+    }
 ```
 
 #### Exercise `_⇔_` (practice) {#iff}
@@ -460,7 +470,37 @@ record _⇔_ (A B : Set) : Set where
 Show that equivalence is reflexive, symmetric, and transitive.
 
 ```agda
--- Your code goes here
+open _⇔_
+
+⇔-refl : ∀ {A : Set}
+    -----
+  → A ⇔ A
+⇔-refl =
+  record
+    { to      = λ{x → x}
+    ; from    = λ{x → x}
+    }
+
+⇔-sym : ∀ {A B : Set}
+  → A ⇔ B
+    -----
+  → B ⇔ A
+⇔-sym a⇔b =
+  record
+    { to      = from a⇔b
+    ; from    = to a⇔b
+    }
+
+⇔-trans : ∀ {A B C : Set}
+  → A ⇔ B
+  → B ⇔ C
+    -----
+  → A ⇔ C
+⇔-trans a⇔b b⇔c =
+  record
+    { to      = to b⇔c ∘ to a⇔b
+    ; from    = from a⇔b ∘ from b⇔c
+    }
 ```
 
 #### Exercise `Bin-embedding` (stretch) {#Bin-embedding}
