@@ -470,7 +470,37 @@ commutative and associative _up to isomorphism_.
 Show sum is commutative up to isomorphism.
 
 ```agda
--- Your code goes here
+⊎-swap : ∀ {A B : Set}
+  → A ⊎ B
+    -----------
+  → B ⊎ A
+⊎-swap (inj₁ x) = (inj₂ x)
+⊎-swap (inj₂ y) = (inj₁ y)
+
+
+⊎-swap-swap-id : ∀ {A B : Set} (w : A ⊎ B) → ⊎-swap (⊎-swap w) ≡ w
+⊎-swap-swap-id (inj₁ x) = refl
+⊎-swap-swap-id (inj₂ y) = refl
+
+
+⊎-comm : ∀ {A B : Set} → A ⊎ B ≃ B ⊎ A
+⊎-comm =
+  record
+    { to       = λ{ w → ⊎-swap w }
+    ; from     = λ{ w → ⊎-swap w }
+    ; from∘to  = λ{ w → 
+                    begin
+                      ⊎-swap (⊎-swap w)
+                    ≡⟨ ⊎-swap-swap-id w ⟩
+                      w
+                    ∎}
+    ; to∘from  = λ{ w →
+                    begin
+                      ⊎-swap (⊎-swap w)
+                    ≡⟨ ⊎-swap-swap-id w ⟩
+                      w
+                    ∎}
+    }
 ```
 
 #### Exercise `⊎-assoc` (practice)
@@ -478,7 +508,47 @@ Show sum is commutative up to isomorphism.
 Show sum is associative up to isomorphism.
 
 ```agda
--- Your code goes here
+⊎-rotateˡ : ∀ {A B C : Set} → (A ⊎ B) ⊎ C → A ⊎ (B ⊎ C)
+⊎-rotateˡ (inj₁ (inj₁ x)) = inj₁ x
+⊎-rotateˡ (inj₁ (inj₂ x)) = inj₂ (inj₁ x)
+⊎-rotateˡ (inj₂ x)        = inj₂ (inj₂ x)
+
+⊎-rotateʳ : ∀ {A B C : Set} → A ⊎ (B ⊎ C) → (A ⊎ B) ⊎ C
+⊎-rotateʳ (inj₁ x)        = inj₁ (inj₁ x)
+⊎-rotateʳ (inj₂ (inj₁ x)) = inj₁ (inj₂ x)
+⊎-rotateʳ (inj₂ (inj₂ x)) = inj₂ x
+
+⊎-rotateˡ-rotateʳ-id : ∀ {A B C : Set} (w : (A ⊎ B) ⊎ C) →
+                        ⊎-rotateʳ (⊎-rotateˡ w) ≡ w
+
+⊎-rotateˡ-rotateʳ-id (inj₁ (inj₁ x)) = refl
+⊎-rotateˡ-rotateʳ-id (inj₁ (inj₂ x)) = refl
+⊎-rotateˡ-rotateʳ-id (inj₂ x) = refl
+
+⊎-rotateʳ-rotateˡ-id : ∀ {A B C : Set} (w : A ⊎ (B ⊎ C)) →
+                        ⊎-rotateˡ (⊎-rotateʳ w) ≡ w
+⊎-rotateʳ-rotateˡ-id (inj₁ x) = refl
+⊎-rotateʳ-rotateˡ-id (inj₂ (inj₁ x)) = refl
+⊎-rotateʳ-rotateˡ-id (inj₂ (inj₂ x)) = refl
+
+⊎-assoc : ∀ {A B C : Set} → (A ⊎ B) ⊎ C ≃ A ⊎ (B ⊎ C)
+⊎-assoc =
+  record
+    { to       = λ{ w → ⊎-rotateˡ w }
+    ; from     = λ{ w → ⊎-rotateʳ w }
+    ; from∘to  = λ{ w →
+                    begin
+                      ⊎-rotateʳ (⊎-rotateˡ w)
+                    ≡⟨ ⊎-rotateˡ-rotateʳ-id w ⟩
+                      w
+                    ∎}
+    ; to∘from  = λ{ w →
+                    begin
+                      ⊎-rotateˡ (⊎-rotateʳ w)
+                    ≡⟨ ⊎-rotateʳ-rotateˡ-id w ⟩
+                      w
+                    ∎}
+    }
 ```
 
 ## False is empty
@@ -544,7 +614,14 @@ is the identity of sums _up to isomorphism_.
 Show empty is the left identity of sums up to isomorphism.
 
 ```agda
--- Your code goes here
+⊥-identityˡ : ∀ {A : Set} → ⊥ ⊎ A ≃ A
+⊥-identityˡ =
+  record
+    { to      = λ{ (inj₂ x) → x }
+    ; from    = λ{ x → inj₂ x }
+    ; from∘to = λ{ (inj₂ x) → refl }
+    ; to∘from = λ{ x → refl }
+    }
 ```
 
 #### Exercise `⊥-identityʳ` (practice)
@@ -552,7 +629,17 @@ Show empty is the left identity of sums up to isomorphism.
 Show empty is the right identity of sums up to isomorphism.
 
 ```agda
--- Your code goes here
+-- Is there a neat way to flip ⊥-identityˡ? Yes, use commutativity isomorphism of ⊎!
+
+⊥-identityʳ : ∀ {A : Set} → A ⊎ ⊥ ≃ A
+⊥-identityʳ {A} =
+  ≃-begin
+    (A ⊎ ⊥)
+  ≃⟨ ⊎-comm ⟩
+    (⊥ ⊎ A)
+  ≃⟨ ⊥-identityˡ ⟩
+    A
+  ≃-∎
 ```
 
 ## Implication is function {#implication}
@@ -773,29 +860,46 @@ one of these laws is "more true" than the other.
 
 Show that the following property holds:
 ```agda
-postulate
-  ⊎-weak-× : ∀ {A B C : Set} → (A ⊎ B) × C → A ⊎ (B × C)
+--postulate
+--  ⊎-weak-× : ∀ {A B C : Set} → (A ⊎ B) × C → A ⊎ (B × C)
 ```
 This is called a _weak distributive law_. Give the corresponding
 distributive law, and explain how it relates to the weak version.
 
 ```agda
--- Your code goes here
-```
+-- Corresponding distributive law:
+--   Basic arithmatic rendering: (a + b) * c = a + (b * c)
+--   This is only true if a is 0. So for ⊎ and × it must only
+--   be true for a is ⊥?
+⊎-weak-× : ∀ {A B C : Set} → (A ⊎ B) × C → A ⊎ (B × C)
+⊎-weak-× ⟨ inj₁ a , _ ⟩ = inj₁ a
+⊎-weak-× ⟨ inj₂ b , c ⟩ = inj₂ ⟨ b , c ⟩
 
+```
 
 #### Exercise `⊎×-implies-×⊎` (practice)
 
 Show that a disjunct of conjuncts implies a conjunct of disjuncts:
 ```agda
-postulate
-  ⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+--postulate
+--  ⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
 ```
 Does the converse hold? If so, prove; if not, give a counterexample.
 
 ```agda
--- Your code goes here
+⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+⊎×-implies-×⊎ (inj₁ ⟨ a , b ⟩) = ⟨ inj₁ a , inj₁ b ⟩
+⊎×-implies-×⊎ (inj₂ ⟨ c , d ⟩) = ⟨ inj₂ c , inj₂ d ⟩
 ```
+The converse failes to hold in two of the four cases
+    ×⊎-implies-⊎× : ∀ {A B C D : Set} → (A ⊎ C) × (B ⊎ D) → (A × B) ⊎ (C × D)
+    ×⊎-implies-⊎× ⟨ inj₁ a , inj₁ b ⟩ = inj₁ (⟨ a , b ⟩)
+    ×⊎-implies-⊎× ⟨ inj₁ a , inj₂ d ⟩ = inj₁ (⟨ a , d ⟩) -- Does not hold!
+    ×⊎-implies-⊎× ⟨ inj₂ c , inj₁ b ⟩ = inj₂ (⟨ c , b ⟩) -- Does not hold!
+    ×⊎-implies-⊎× ⟨ inj₂ c , inj₂ d ⟩ = inj₂ (⟨ c , d ⟩)
+
+It does not in these cases because the result can either be (A × B) xor (C × D),
+but in the violating cases we have an A but not B, and a C but not a D.
 
 
 ## Standard library
