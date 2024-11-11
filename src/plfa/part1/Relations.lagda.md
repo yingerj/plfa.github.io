@@ -313,6 +313,7 @@ Divides-trans (divides-induct mn) np = {!!}
 -- Haven't yet come across proof of nonexistence in Agda, does it exist?
 ```
 
+
 ## Reflexivity
 
 The first property to prove about comparison is that it is reflexive:
@@ -688,7 +689,21 @@ similar to that used for totality.
 [negation](/Negation/).)
 
 ```agda
--- Your code goes here
+data Trichotomy (m n : ℕ) : Set where
+  less :
+      m < n
+      ---------
+    → Trichotomy m n
+
+  equal :
+      m ≡ n
+      ---------
+    → Trichotomy m n
+
+  greater :
+    n < m -- Equivalent to `m > n`, but in terms of `<` which is defined
+      ---------
+    → Trichotomy m n
 ```
 
 #### Exercise `+-mono-<` (practice) {#plus-mono-less}

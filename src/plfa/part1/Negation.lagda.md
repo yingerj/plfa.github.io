@@ -14,12 +14,12 @@ and classical logic.
 
 ```agda
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat using (ℕ; zero; suc; _<_; z<s; s<s; z≤n; s≤s; _>_; _≤_)
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Relation.Nullary.Negation using (contradiction)
-open import plfa.part1.Isomorphism using (_≃_; extensionality)
+open import plfa.part1.Isomorphism using (_≃_; extensionality; _≲_)
 ```
 
 
@@ -191,7 +191,9 @@ Using negation, show that
 is irreflexive, that is, `n < n` holds for no `n`.
 
 ```agda
--- Your code goes here
+<-irreflexive : ∀ (n : ℕ) → n < n → ⊥
+<-irreflexive zero = λ()
+<-irreflexive (suc n) (s≤s x) = <-irreflexive n x
 ```
 
 
@@ -209,7 +211,50 @@ Here "exactly one" means that not only one of the three must hold,
 but that when one holds the negation of the other two must also hold.
 
 ```agda
--- Your code goes here
+-- Tried a ludicrous number of attempts to express this all in a single statement
+-- but always got hung up on the inductive case since it ended up being something
+-- terrible like:
+--
+--   trichotomy-exclusivity-ind : ∀ {n m : ℕ} →
+--     (n ≮ m) × (n ≢ m) × (m < n) ⊎
+--     (n ≮ m) × (n ≡ m) × (m ≮ n) ⊎
+--     (n < m) × (n ≢ m) × (m ≮ n)     →
+--     ((suc n) ≮ (suc m)) × ((suc n) ≢ (suc m)) × ((suc m) < (suc n)) ⊎
+--     ((suc n) ≮ (suc m)) × ((suc n) ≡ (suc m)) × ((suc m) ≮ (suc n)) ⊎
+--     ((suc n) < (suc m)) × ((suc n) ≢ (suc m)) × ((suc m) ≮ (suc n))
+--
+-- Finally realized the following statements had the same implication but only
+-- required one additional trick on top of the above <-irreflexive.
+
+<→≢ : ∀ (n m : ℕ) → n < m → n ≡ m → ⊥
+<→≢  zero   (suc m)  n<m           = λ()
+<→≢ (suc n) (suc m) (s≤s n<m) refl = <→≢ n m n<m refl
+
+<→≯ : ∀ (n m : ℕ) → n < m → m < n → ⊥
+<→≯  zero    m       n<m = λ()
+<→≯ (suc n) (suc m) (s≤s n<m) (s≤s m<n) = <→≯ n m n<m m<n
+
+≡→≮ : ∀ (n m : ℕ) → n ≡ m → n < m → ⊥
+≡→≮  zero    zero   n≡m          = λ()
+≡→≮ (suc n) (suc m) refl (s≤s c) = ≡→≮ n m refl c
+
+≡→≯ : ∀ (n m : ℕ) → n ≡ m → m < n → ⊥
+≡→≯  zero    zero   n≡m          = λ()
+≡→≯ (suc n) (suc m) refl (s≤s c) = ≡→≮ n m refl c
+
+>→≮ : ∀ (n m : ℕ) → m < n → n < m → ⊥
+>→≮ n zero m<n = λ()
+>→≮ (suc n) (suc m) (s≤s m<n) (s≤s n<m) = >→≮ n m m<n n<m
+
+>→≢ : ∀ (m n : ℕ) → m < n → n ≡ m → ⊥
+>→≢ zero (suc n) m<n = λ()
+>→≢ (suc m) (suc n) (s≤s m<n) refl = >→≢ m n m<n refl
+-- Curiously an equivalent proof of the above takes three cases if m and n
+--are reversed in the ∀ statement:
+-- >→≢ : ∀ (n m : ℕ) → m < n → n ≡ m → ⊥
+-- >→≢ (suc zero) zero m<n = λ()
+-- >→≢ (suc (suc n)) zero m<n = λ()
+-- >→≢ (suc n) (suc m) (s≤s m<n) refl = >→≢ n m m<n refl
 ```
 
 #### Exercise `⊎-dual-×` (recommended)
@@ -222,7 +267,22 @@ version of De Morgan's Law.
 This result is an easy consequence of something we've proved previously.
 
 ```agda
--- Your code goes here
+-- Use →-distrib-⊎ to make this easy...
+
+-- Copying definition and necessary import because the Connectives definition
+-- relies on a local definition of ⊎ rather than the standard library's definition.
+open import Function using (_∘_)
+→-distrib-⊎ : ∀ {A B C : Set} → (A ⊎ B → C) ≃ ((A → C) × (B → C))
+→-distrib-⊎ =
+  record
+    { to      = λ{ f → ⟨ f ∘ inj₁ , f ∘ inj₂ ⟩ }
+    ; from    = λ{ ⟨ g , h ⟩ → λ{ (inj₁ x) → g x ; (inj₂ y) → h y } }
+    ; from∘to = λ{ f → extensionality λ{ (inj₁ x) → refl ; (inj₂ y) → refl } }
+    ; to∘from = λ{ _ → refl }
+    }
+
+⊎-dual-× : ∀ {A B : Set} → ¬ (A ⊎ B) ≃ (¬ A) × (¬ B)
+⊎-dual-× = →-distrib-⊎
 ```
 
 
@@ -232,6 +292,109 @@ Do we also have the following?
 
 If so, prove; if not, can you give a relation weaker than
 isomorphism that relates the two sides?
+
+Jack:
+This can't be an isomorphism because for a given sum only one of the constituent
+types is available, so you can't create a product containing both constituents.
+
+Let's think about this a bit more. Abstracting
+
+    ¬ (A × B) ≃ (¬ A) ⊎ (¬ B)
+
+using the definition of ¬ we get
+
+    (A × B) → C ≃ (A → C) ⊎ (B → C)
+
+where C is ⊥.
+
+To try to fall back on aritmetic laws...
+
+    c ^ (a * b) != c ^ a + c ^ b
+
+In general, but if a and b are 0 then the above holds. Having trouble drawing a
+useful conclusion from that though.
+
+Ok, let's try another mode of attack...
+
+Given commutative product isomorphism
+
+    A × B ≃ B × A
+
+and currying
+
+    (A → B → C) ≃ (A × B → C)
+
+it follows that
+
+    (A × B) → C  ≃  A → B → C  ≃  B → A → C  ≃  (B × A) → C
+
+holds.
+
+How can we look at the following in light of the above? Does it hold?
+
+    (A × B) → ⊥ ≃ (A → ⊥) ⊎ (B → ⊥)
+
+We can say given currying and commutative product isomorphism that:
+
+    (A × B) → ⊥  ≃  A → B → ⊥  ≃  B → A → ⊥
+
+I'm just not seeing how to get a sum type in here without some lossyness.
+
+
+After reading the following discussion "Intuitive and Classical logic",
+the thought that a proof about ⊎ must indicate which injection holds.
+Perhaps this can be of use. I get a vague intuition that it is possible to
+proove that we have an embedding, because embedding is "lossy" in a sense:
+it has no to∘from.
+
+```agda
+-- Fiddled around wit the below attempt but decided it is impossilbe.
+```
+→-distrib-× : ∀ {A B C : Set} → ((A × B) → C) ≲ ((A → C) ⊎ (B → C))
+→-distrib-× =
+  record
+    { to      = λ{ f → inj₂ λ{ g → f ⟨ {!!} , g ⟩ } }
+    ; from    = λ{ f → {!!} }
+    ; from∘to = λ{ f → {!!} }
+    }
+
+×-dual-⊎ : ∀ {A B : Set} → ¬ (A × B) ≲ (¬ A) ⊎ (¬ B)
+×-dual-⊎ = →-distrib-×
+
+    { to      = λ{ f → inj₂ λ{ g → {!!} } }
+                ?0 : C
+                ?1 : A × B → C
+                ?2
+                  : (λ { f → ?1 (f = f) })
+                    ((λ { f → inj₂ (λ { g → ?0 (f = f) (g = g) }) }) f)
+                    ≡ f
+
+
+    { to      = λ{ f → inj₂ {!!} }
+              ?0 : B → C
+              ?1 : A × B → C
+              ?2 : (λ { f → ?1 (f = f) }) ((λ { f → inj₂ (?0 (f = f)) }) f) ≡ f
+
+    { to      = λ{ f → {!!} }
+              ?0 : (A → C) ⊎ (B → C)
+              ?1 : A × B → C
+              ?2 : (λ { f → ?1 (f = f) }) ((λ { f → ?0 (f = f) }) f) ≡ f
+
+    { to      =
+              ?0 : (A × B → C) → (A → C) ⊎ (B → C)
+              ?1 : A × B → C
+              ?2 : (λ { f → ?1 (f = f) }) (?0 f) ≡ f
+
+Ok, I am pretty sure this just doesn't work in intuitionistic logic because
+you need to know exactly which of the cases of the sum holds (one holds and
+the other must not hold).
+
+You could look at `A → C` and `B → C` as curried versions of `A × B-> C` but
+the problem is slipping in the opposite type from the product. I don't see
+anywhere an object of that type can come from.
+
+End Jack:
+
 
 
 ## Intuitive and Classical logic
