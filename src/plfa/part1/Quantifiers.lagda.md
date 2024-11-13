@@ -14,7 +14,7 @@ This chapter introduces universal and existential quantification.
 ```agda
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _≤_; z≤n; s≤s)
 open import Relation.Nullary using (¬_)
 open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
@@ -90,23 +90,36 @@ dependent product is ambiguous.
 
 Show that universals distribute over conjunction:
 ```agda
-postulate
-  ∀-distrib-× : ∀ {A : Set} {B C : A → Set} →
-    (∀ (x : A) → B x × C x) ≃ (∀ (x : A) → B x) × (∀ (x : A) → C x)
+∀-distrib-× : ∀ {A : Set} {B C : A → Set} →
+  (∀ (x : A) → B x × C x) ≃ (∀ (x : A) → B x) × (∀ (x : A) → C x)
+∀-distrib-× =
+  record
+    { to      = λ{ f         → ⟨ proj₁ ∘ f , proj₂ ∘ f ⟩ }
+    ; from    = λ{ ⟨ g , h ⟩ → λ{ x → ⟨ g x , h x ⟩ } }
+    ; from∘to = λ{ f         → refl }
+    ; to∘from = λ{ ⟨ g , h ⟩ → refl }
+    }
 ```
 Compare this with the result (`→-distrib-×`) in
 Chapter [Connectives](/Connectives/).
+
+Jack : It is identical in implementation, but not in type. In Connectives
+the isomorphism is between functions where ∀-distrib-× is an isomorphism
+between dependent functions.
 
 #### Exercise `⊎∀-implies-∀⊎` (practice)
 
 Show that a disjunction of universals implies a universal of disjunctions:
 ```agda
-postulate
-  ⊎∀-implies-∀⊎ : ∀ {A : Set} {B C : A → Set} →
-    (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x) → ∀ (x : A) → B x ⊎ C x
+⊎∀-implies-∀⊎ : ∀ {A : Set} {B C : A → Set} →
+  (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x) → ∀ (x : A) → B x ⊎ C x
+⊎∀-implies-∀⊎ (inj₁ a) = inj₁ ∘ a
+⊎∀-implies-∀⊎ (inj₂ b) = inj₂ ∘ b
 ```
 Does the converse hold? If so, prove; if not, explain why.
 
+Jack: The converse does not hold because we cannot know in general when
+`∀ (x : A) → B x ⊎ C x` has a result of `inj₁` or `inj₂`.
 
 #### Exercise `∀-×` (practice)
 
@@ -121,7 +134,21 @@ Let `B` be a type indexed by `Tri`, that is `B : Tri → Set`.
 Show that `∀ (x : Tri) → B x` is isomorphic to `B aa × B bb × B cc`.
 
 Hint: you will need to use [`∀-extensionality`](/Isomorphism/#extensionality).
-
+```agda
+tri-isomorphism : {B : Tri → Set} →
+  (∀ (x : Tri) → B x) ≃ B aa × B bb × B cc
+tri-isomorphism =
+  record
+    { to      = λ b → ⟨ b aa , ⟨ b bb , b cc ⟩ ⟩
+    ; from    = λ (⟨ a , ⟨ b , c ⟩ ⟩) →
+                   λ { aa → a
+                     ; bb → b
+                     ; cc → c
+                     }
+    ; from∘to = λ{ x → ∀-extensionality λ{ aa → refl ; bb → refl ; cc → refl } }
+    ; to∘from = λ{ x → refl }
+    }
+```
 
 ## Existentials
 
@@ -265,26 +292,67 @@ establish the isomorphism is identical to what we wrote when discussing
 
 Show that existentials distribute over disjunction:
 ```agda
-postulate
-  ∃-distrib-⊎ : ∀ {A : Set} {B C : A → Set} →
-    ∃[ x ] (B x ⊎ C x) ≃ (∃[ x ] B x) ⊎ (∃[ x ] C x)
+∃-distrib-⊎ : ∀ {A : Set} {B C : A → Set} →
+  ∃[ x ] (B x ⊎ C x) ≃ (∃[ x ] B x) ⊎ (∃[ x ] C x)
+∃-distrib-⊎ =
+  record
+    { to      =  λ{ ⟨ a , inj₁ Ba ⟩ → inj₁ ⟨ a , Ba ⟩
+                  ; ⟨ a , inj₂ Ca ⟩ → inj₂ ⟨ a , Ca ⟩
+                  }
+    ; from    =  λ{ (inj₁ ⟨ a , Ba ⟩) → ⟨ a , inj₁ Ba ⟩
+                  ; (inj₂ ⟨ a , Ca ⟩) → ⟨ a , inj₂ Ca ⟩
+                  }
+    ; from∘to =  λ{ ⟨ a , inj₁ Ba ⟩ → refl
+                  ; ⟨ a , inj₂ Ca ⟩ → refl
+                  }
+    ; to∘from =  λ{ (inj₁ ⟨ a , Ba ⟩) → refl
+                  ; (inj₂ ⟨ a , Ca ⟩) → refl
+                  }
+    }
 ```
 
 #### Exercise `∃×-implies-×∃` (practice)
 
 Show that an existential of conjunctions implies a conjunction of existentials:
 ```agda
-postulate
-  ∃×-implies-×∃ : ∀ {A : Set} {B C : A → Set} →
-    ∃[ x ] (B x × C x) → (∃[ x ] B x) × (∃[ x ] C x)
+∃×-implies-×∃ : ∀ {A : Set} {B C : A → Set} →
+  ∃[ x ] (B x × C x) → (∃[ x ] B x) × (∃[ x ] C x)
+∃×-implies-×∃ ⟨ x , ⟨ Bx , Cx ⟩ ⟩ = ⟨ ⟨ x , Bx ⟩ , ⟨ x , Cx ⟩ ⟩
 ```
 Does the converse hold? If so, prove; if not, explain why.
+
+Jack: The converse does not hold because the occurrences of `x` in the to sides of
+`(∃[ x ] B x) × (∃[ x ] C x)` are not the same `x` if it is the evidence. Hence,
+`∃[ x ] (B x × C x)` cannot hold as the result.
 
 #### Exercise `∃-⊎` (practice)
 
 Let `Tri` and `B` be as in Exercise `∀-×`.
 Show that `∃[ x ] B x` is isomorphic to `B aa ⊎ B bb ⊎ B cc`.
 
+```agda
+∃-⊎ : {B : Tri → Set} →
+ ∃[ x ] B x ≃ B aa ⊎ B bb ⊎ B cc
+∃-⊎ =
+  record
+    { to      =  λ{ ⟨ aa , Ba ⟩ → (inj₁       Ba)
+                  ; ⟨ bb , Bb ⟩ → (inj₂ (inj₁ Bb))
+                  ; ⟨ cc , Bc ⟩ → (inj₂ (inj₂ Bc))
+                  }
+    ; from    =  λ{ (inj₁       Ba)  → ⟨ aa , Ba ⟩
+                  ; (inj₂ (inj₁ Bb)) → ⟨ bb , Bb ⟩
+                  ; (inj₂ (inj₂ Bc)) → ⟨ cc , Bc ⟩
+                  }
+    ; from∘to =  λ{ ⟨ aa , Ba ⟩ → refl
+                  ; ⟨ bb , Bb ⟩ → refl
+                  ; ⟨ cc , Bc ⟩ → refl
+                  }
+    ; to∘from =  λ{ (inj₁       Ba)  → refl
+                  ; (inj₂ (inj₁ Bb)) → refl
+                  ; (inj₂ (inj₂ Bc)) → refl
+                  }
+    }
+```
 
 ## An existential example
 
@@ -394,8 +462,57 @@ by `2 * m` and `2 * m + 1`?  Rewrite the proofs of `∃-even` and `∃-odd` when
 restated in this way.
 
 ```agda
--- Your code goes here
 ```
+∃-even′ : ∀ {n : ℕ} → ∃[ m ] (2 * m     ≡ n) → even n
+∃-odd′  : ∀ {n : ℕ} → ∃[ m ] (2 * m + 1 ≡ n) →  odd n
+
+∃-even′ ⟨  zero , refl ⟩  =  even-zero
+∃-even′ ⟨ suc m , refl ⟩  =  even-suc (∃-odd′ ⟨ m , {!!} ⟩)
+
+∃-odd′  ⟨     m , refl ⟩  =  {!!}
+
+Jack:
+If I drop holes into `∃-even` and `∃-even′` in the location:
+
+   ∃-even′ ⟨ suc m , refl ⟩  =  even-suc (∃-odd′ ⟨ m , {!!} ⟩)
+
+I get the following hole types for `∃-even` and `∃-even′` respectively:
+
+   ?0 : 1 + m * 2 ≡ suc (m * 2)
+   ?1 : 2 * m + 1 ≡ m + 1 * suc m
+
+In the `∃-even` case it is clear that the RHS of `≡` is `suc` of `m * 2` where `m` is
+`even`. This is `refl` because the sides of `≡` are trivially equivalent.
+
+However in the `∃-even′` case, it is clear that the sides of `≡` are not trivially
+equivalent and a chain of `≡` reasoning will be required to prove equivalence. It was
+not immediately clear to me how the term `m + 1 * suc m` came into being, but I think
+this is what happened...
+
+Starting from:
+
+   2 * m + 1
+
+Factoring a `suc` out of `2`:
+
+   (suc 1) * m + 1
+
+By `suc n * m = m + n * m`:
+
+   m + 1 * m + 1
+
+Though I'm not really sure how the above is transformed to the below.
+
+   m + 1 * suc m
+
+Perhaps the specifics are beside the point though. The dependencies introduced in the ∃ term
+in `∃-even` and `∃-odd` has a clear natrual mapping to the definitions of the arithmatic
+functions involved where `∃-even′` and `∃-odd′` have dependencies that are not trivially
+mapped to the arithmatic function definitions.
+
+I'm satisfied with this conclusion and do not feel the need to execute the exercise fully.
+
+EndJack:
 
 #### Exercise `∃-+-≤` (practice)
 
@@ -403,7 +520,12 @@ Show that `y ≤ z` holds if and only if there exists a `x` such that
 `x + y ≡ z`.
 
 ```agda
--- Your code goes here
+-- Note that it took the trick learned above of swapping the proposed
+-- `x + y ≡ z` given in the problem for the eqivalent `y + x ≡ z` to
+-- make this easily provable.
+∃-+-≤ : ∀ {z : ℕ} → ∀ (y : ℕ)  → ∃[ x ] (y + x ≡ z) → y ≤ z
+∃-+-≤ zero    ⟨ x , refl ⟩ = z≤n
+∃-+-≤ (suc y) ⟨ x , refl ⟩ = s≤s (∃-+-≤ y ⟨ x , refl ⟩)
 ```
 
 
@@ -445,14 +567,16 @@ The two inverse proofs are straightforward.
 
 Show that existential of a negation implies negation of a universal:
 ```agda
-postulate
-  ∃¬-implies-¬∀ : ∀ {A : Set} {B : A → Set}
-    → ∃[ x ] (¬ B x)
-      --------------
-    → ¬ (∀ x → B x)
+∃¬-implies-¬∀ : ∀ {A : Set} {B : A → Set}
+  → ∃[ x ] (¬ B x)
+    --------------
+  → ¬ (∀ x → B x)
+∃¬-implies-¬∀ ⟨ x , ¬Bx ⟩ = λ{ x→Bx → ¬Bx (x→Bx x) }
 ```
 Does the converse hold? If so, prove; if not, explain why.
 
+Jack: The converse does not hold because ¬∀ does not provide which `x`
+exist such that `∃[ x ] (¬ B x)` holds.
 
 #### Exercise `Bin-isomorphism` (stretch) {#Bin-isomorphism}
 
