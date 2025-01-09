@@ -355,7 +355,32 @@ reverse of the second appended to the reverse of the first:
     reverse (xs ++ ys) ≡ reverse ys ++ reverse xs
 
 ```agda
--- Your code goes here
+reverse-++-distrib : ∀ {A : Set} (xs ys : List A)
+  → reverse (xs ++ ys) ≡ reverse ys ++ reverse xs
+reverse-++-distrib [] ys =
+  begin
+    reverse ([] ++ ys)
+  ≡⟨⟩
+    reverse ys
+  ≡⟨ sym (++-identityʳ (reverse ys)) ⟩
+    (reverse ys) ++ []
+  ≡⟨⟩
+    reverse ys ++ reverse []
+  ∎
+reverse-++-distrib (x ∷ xs) ys =
+  begin
+    reverse ((x ∷ xs) ++ ys)
+  ≡⟨⟩
+    reverse (x ∷ (xs ++ ys))
+  ≡⟨⟩
+    reverse (xs ++ ys) ++ [ x ]
+  ≡⟨ cong (_++ [ x ]) (reverse-++-distrib xs ys) ⟩
+    (reverse ys ++ reverse xs) ++ [ x ]
+  ≡⟨ ++-assoc (reverse ys) (reverse xs) [ x ] ⟩
+    reverse ys ++ reverse xs ++ [ x ]
+  ≡⟨⟩
+    reverse ys ++ reverse (x ∷ xs)
+  ∎
 ```
 
 
@@ -367,7 +392,25 @@ as the identity function.  Show that reverse is an involution:
     reverse (reverse xs) ≡ xs
 
 ```agda
--- Your code goes here
+reverse-involutive : ∀ {A : Set} (xs : List A)
+  → reverse (reverse xs) ≡ xs
+reverse-involutive [] = refl
+reverse-involutive (x ∷ xs) =
+  begin
+    reverse (reverse (x ∷ xs))
+  ≡⟨⟩
+    reverse (reverse xs ++ [ x ])
+  ≡⟨⟩
+    reverse (reverse xs ++ reverse [ x ])
+  ≡⟨ reverse-++-distrib (reverse xs) (reverse [ x ]) ⟩
+    reverse (reverse [ x ]) ++ reverse (reverse xs)
+  ≡⟨⟩
+    [ x ] ++ reverse (reverse xs)
+  ≡⟨ cong ([ x ] ++_) (reverse-involutive xs) ⟩
+    [ x ] ++ xs
+  ≡⟨⟩
+    (x ∷ xs)
+  ∎
 ```
 
 
