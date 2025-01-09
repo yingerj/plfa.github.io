@@ -252,6 +252,8 @@ Give an example of a preorder that is not a partial order.
 Give an example of a partial order that is not a total order.
 
 ```agda
+-- Incomplete Divides work causing trouble for Decidable module, commenting it out.
+```
 -- The aformentioned "Divides" relationship for ℕ is a good example.
 -- Taking for granted the Preorder Wikipedia page's treatment of
 -- reflexive and transative properties (which are actually not directly
@@ -311,7 +313,6 @@ Divides-trans (divides-induct mn) np = {!!}
 --  → m ≡ n
 
 -- Haven't yet come across proof of nonexistence in Agda, does it exist?
-```
 
 
 ## Reflexivity
