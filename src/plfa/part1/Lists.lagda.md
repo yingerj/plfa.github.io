@@ -25,7 +25,7 @@ open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Data.Product using (_×_; ∃; ∃-syntax) renaming (_,_ to ⟨_,_⟩)
 open import Function using (_∘_)
 open import Level using (Level)
-open import plfa.part1.Isomorphism using (_≃_; _⇔_)
+open import plfa.part1.Isomorphism using (_≃_; _⇔_; extensionality)
 ```
 
 
@@ -580,7 +580,29 @@ Prove that the map of a composition is equal to the composition of two maps:
 The last step of the proof requires extensionality.
 
 ```agda
--- Your code goes here
+map-compose-helper : ∀ {A B C : Set} (f : (A → B)) (g : (B → C)) (xs : List A)
+  → map (g ∘ f) xs ≡ (map g ∘ map f) xs
+map-compose-helper f g [] = refl
+map-compose-helper f g (x ∷ xs) =
+  begin
+    map (g ∘ f) (x ∷ xs)
+  ≡⟨⟩
+    (g ∘ f) x ∷ map (g ∘ f) xs
+  ≡⟨ cong ((g ∘ f) x ∷_) (map-compose-helper f g xs) ⟩
+    (g ∘ f) x ∷ ((map g ∘ map f) xs)
+  ≡⟨⟩
+    g (f x) ∷ (map g (map f xs))
+  ≡⟨⟩
+    map g (f x ∷ (map f xs))
+  ≡⟨⟩
+    map g (map f (x ∷ xs))
+  ≡⟨⟩
+    (map g ∘ map f) (x ∷ xs)
+  ∎
+
+map-compose : ∀ {A B C : Set} (f : (A → B)) (g : (B → C))
+  → map (g ∘ f) ≡ map g ∘ map f
+map-compose f g = extensionality λ{ xs → map-compose-helper f g xs }
 ```
 
 #### Exercise `map-++-distribute` (practice)
@@ -590,7 +612,20 @@ Prove the following relationship between map and append:
     map f (xs ++ ys) ≡ map f xs ++ map f ys
 
 ```agda
--- Your code goes here
+map-++-distribute : ∀ {A B : Set} (f : A → B) (xs ys : List A)
+  → map f (xs ++ ys) ≡ map f xs ++ map f ys
+map-++-distribute f [] [] = refl
+map-++-distribute f [] (y ∷ ys) = refl
+map-++-distribute f (x ∷ xs) ys =
+  begin
+    map f ((x ∷ xs) ++ ys)
+  ≡⟨⟩
+    f x ∷ map f (xs ++ ys)
+  ≡⟨ cong (f x ∷_) (map-++-distribute f xs ys) ⟩
+    f x ∷ map f xs ++ map f ys
+  ≡⟨⟩
+    map f (x ∷ xs) ++ map f ys
+  ∎
 ```
 
 #### Exercise `map-Tree` (practice)
@@ -607,7 +642,9 @@ Define a suitable map operator over trees:
     map-Tree : ∀ {A B C D : Set} → (A → C) → (B → D) → Tree A B → Tree C D
 
 ```agda
--- Your code goes here
+map-Tree : ∀ {A B C D : Set} → (A → C) → (B → D) → Tree A B → Tree C D
+map-Tree ac bd (leaf a) = leaf (ac a)
+map-Tree ac bd (node ltab b rtab) = node (map-Tree ac bd ltab) (bd b) (map-Tree ac bd rtab)
 ```
 
 ## Fold {#Fold}
@@ -689,20 +726,52 @@ For example:
     product [ 1 , 2 , 3 , 4 ] ≡ 24
 
 ```agda
--- Your code goes here
+product : List ℕ → ℕ
+product = foldr _*_ 1
+_ : product [ 1 , 2 , 3 , 4 ] ≡ 24
+_ =
+  begin
+    product [ 1 , 2 , 3 , 4 ]
+  ≡⟨⟩
+    foldr _*_ 1 [ 1 , 2 , 3 , 4 ]
+  ≡⟨⟩
+    foldr _*_ 1 [ 2 , 3 , 4 ]
+  ≡⟨⟩
+    foldr _*_ 2 [ 3 , 4 ]
+  ≡⟨⟩
+    foldr _*_ 6 [ 4 ]
+  ≡⟨⟩
+    foldr _*_ 24 []
+  ≡⟨⟩
+    24
+  ∎
 ```
 
 #### Exercise `foldr-++` (recommended)
 
 Show that fold and append are related as follows:
-```agda
+
 postulate
   foldr-++ : ∀ {A B : Set} (_⊗_ : A → B → B) (e : B) (xs ys : List A) →
     foldr _⊗_ e (xs ++ ys) ≡ foldr _⊗_ (foldr _⊗_ e ys) xs
-```
 
 ```agda
--- Your code goes here
+foldr-++ : ∀ {A B : Set} (_⊗_ : A → B → B) (e : B) (xs ys : List A) →
+  foldr _⊗_ e (xs ++ ys) ≡ foldr _⊗_ (foldr _⊗_ e ys) xs
+foldr-++ _⊗_ e [] [] = refl
+foldr-++ _⊗_ e [] (y ∷ ys) = refl
+foldr-++ _⊗_ e (x ∷ xs) ys =
+  begin
+    foldr _⊗_ e ((x ∷ xs) ++ ys)
+  ≡⟨⟩
+    foldr _⊗_ e (x ∷ (xs ++ ys))
+  ≡⟨⟩
+    x ⊗ foldr _⊗_ e (xs ++ ys)
+  ≡⟨ cong (x ⊗_) (foldr-++ _⊗_ e xs ys) ⟩
+    x ⊗ foldr _⊗_ (foldr _⊗_ e ys) xs
+  ≡⟨⟩
+    foldr _⊗_ (foldr _⊗_ e ys) (x ∷ xs)
+  ∎
 ```
 
 #### Exercise `foldr-∷` (practice)
@@ -875,7 +944,9 @@ operations associate to the left rather than the right.  For example:
     foldl _⊗_ e [ x , y , z ]  =  ((e ⊗ x) ⊗ y) ⊗ z
 
 ```agda
--- Your code goes here
+foldl : ∀ {A B : Set} → (B → A → B) → B → List A → B
+foldl _⊗_ v []       = v
+foldl _⊗_ v (x ∷ xs) = foldl _⊗_ (v ⊗ x) xs
 ```
 
 
@@ -885,7 +956,92 @@ Show that if `_⊗_` and `e` form a monoid, then `foldr _⊗_ e` and
 `foldl _⊗_ e` always compute the same result.
 
 ```agda
--- Your code goes here
+foldl-monoid : ∀ {A : Set} (_⊗_ : A → A → A) (e : A) → IsMonoid _⊗_ e →
+  ∀ (xs : List A) (y : A) → foldl _⊗_ y xs ≡ y ⊗ foldl _⊗_ e xs
+foldl-monoid _⊗_ e ⊗-monoid [] y =
+  begin
+    foldl _⊗_ y []
+  ≡⟨⟩
+    y
+  ≡⟨ sym (identityʳ ⊗-monoid y) ⟩
+    y ⊗ e
+  ≡⟨⟩
+    y ⊗ foldl _⊗_ e []
+  ∎
+foldl-monoid _⊗_ e ⊗-monoid (x ∷ xs) y =
+  begin
+    foldl _⊗_ y (x ∷ xs)
+  ≡⟨⟩
+    foldl _⊗_ (y ⊗ x) xs
+  ≡⟨ foldl-monoid _⊗_ e ⊗-monoid xs (y ⊗ x) ⟩
+    (y ⊗ x) ⊗ foldl _⊗_ e xs
+  ≡⟨ assoc ⊗-monoid y x (foldl _⊗_ e xs) ⟩
+    y ⊗ (x ⊗ foldl _⊗_ e xs)
+  ≡⟨ cong (y ⊗_) (sym (foldl-monoid _⊗_ e ⊗-monoid xs x)) ⟩
+    y ⊗ foldl _⊗_ x xs
+  ≡⟨ cong (λ{ t → y ⊗ foldl _⊗_ t xs }) (sym (identityˡ ⊗-monoid x)) ⟩
+    y ⊗ foldl _⊗_ (e ⊗ x) xs
+  ≡⟨⟩
+    y ⊗ foldl _⊗_ e (x ∷ xs)
+  ∎
+```
+Another approach that failed Agda's termination checker:
+  foldl-monoid _⊗_ e ⊗-monoid [ x ] y =
+    begin
+      foldl _⊗_ y [ x ]
+    ≡⟨⟩
+      y ⊗ x
+    ≡⟨ cong (y ⊗_) (sym (identityˡ ⊗-monoid x)) ⟩
+      y ⊗ (e ⊗ x)
+    ≡⟨⟩
+      y ⊗ foldl _⊗_ e [ x ]
+    ∎
+  foldl-monoid _⊗_ e ⊗-monoid (x1 ∷ x2 ∷ xs) y =
+    begin
+      foldl _⊗_ y (x1 ∷ x2 ∷ xs)
+    ≡⟨⟩
+      foldl _⊗_ (y ⊗ x1) (x2 ∷ xs)
+    ≡⟨⟩
+      foldl _⊗_ ((y ⊗ x1) ⊗ x2) xs
+    ≡⟨ cong (λ{ t → foldl _⊗_ t xs }) (assoc ⊗-monoid y x1 x2) ⟩
+      foldl _⊗_ (y ⊗ (x1 ⊗ x2)) xs
+    ≡⟨⟩
+      foldl _⊗_ y ((x1 ⊗ x2) ∷ xs)
+    ≡⟨ foldl-monoid _⊗_ e ⊗-monoid ((x1 ⊗ x2) ∷ xs) y ⟩
+      y ⊗ foldl _⊗_ e ((x1 ⊗ x2) ∷ xs)
+    ≡⟨⟩
+      y ⊗ foldl _⊗_ (e ⊗ (x1 ⊗ x2)) xs
+    ≡⟨ cong (λ{ t → y ⊗ foldl _⊗_ t xs }) (sym (assoc ⊗-monoid e x1 x2)) ⟩
+      y ⊗ foldl _⊗_ ((e ⊗ x1) ⊗ x2) xs
+    ≡⟨⟩
+      y ⊗ foldl _⊗_ (e ⊗ x1) (x2 ∷ xs)
+    ≡⟨⟩
+      y ⊗ foldl _⊗_ e (x1 ∷ x2 ∷ xs)
+    ∎
+
+
+If I were to strictly be following the prompt by finding
+`foldr _⊗_ e ≣ foldl _⊗_ e` I would use extensionality,
+bit I've skipped that as it is trivial to introduce `xs`
+via extensionality.
+```agda
+foldr-monoid-foldl : ∀ {A : Set} (_⊗_ : A → A → A) (e : A) → IsMonoid _⊗_ e
+  → ∀ (xs : List A) → foldr _⊗_ e xs ≡ foldl _⊗_ e xs
+foldr-monoid-foldl _⊗_ e ⊗-monoid [] = refl
+foldr-monoid-foldl _⊗_ e ⊗-monoid (x ∷ xs) =
+  begin
+    foldr _⊗_ e (x ∷ xs)
+  ≡⟨⟩
+    x ⊗ foldr _⊗_ e xs
+  ≡⟨ cong (x ⊗_) (foldr-monoid-foldl _⊗_ e ⊗-monoid xs) ⟩
+    x ⊗ foldl _⊗_ e xs
+  ≡⟨ sym (foldl-monoid _⊗_ e ⊗-monoid xs x) ⟩
+    foldl _⊗_ x xs
+  ≡⟨ cong (λ{ t → foldl _⊗_ t xs }) (sym (identityˡ ⊗-monoid x)) ⟩
+    foldl _⊗_ (e ⊗ x) xs
+  ≡⟨⟩
+    foldl _⊗_ e (x ∷ xs)
+  ∎
 ```
 
 
