@@ -15,7 +15,7 @@ examples of polymorphic types and higher-order functions.
 
 ```agda
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl; sym; trans; cong)
+open Eq using (_≡_; _≢_; refl; sym; trans; cong)
 open Eq.≡-Reasoning
 open import Data.Bool using (Bool; true; false; T; _∧_; _∨_; not)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _≤_; s≤s; z≤n)
@@ -1159,7 +1159,41 @@ replacement for `_×_`.  As a consequence, demonstrate an equivalence relating
 `_∈_` and `_++_`.
 
 ```agda
--- Your code goes here
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+--open import Eq using (_≢_)
+
+Any-++-⇔ : ∀ {A : Set} (a : A) (xs ys : List A) →
+  (a ∈ (xs ++ ys)) ⇔ ((a ∈ xs) ⊎ (a ∈ ys))
+Any-++-⇔ a xs ys =
+  record
+    { to   = to   a xs ys
+    ; from = from a xs ys
+    }
+  where
+
+```
+  to-helper : ∀ {A : Set} (a : A) (xs : List A) →
+    (a ∈ xs) → (a ∈ xs)
+  to-helper a xs (here a≡x) = here a≡x
+  to-helper a (x ∷ xs) (there aP) = there (to-helper a xs aP)
+```
+
+  to : ∀ {A : Set} (a : A) (xs ys : List A) →
+    (a ∈ (xs ++ ys)) → (a ∈ xs ⊎ a ∈ ys)
+  to a []       (y ∷ ys) (here a≡y) = inj₂ (here a≡y)
+  to a []       (y ∷ ys) (there aP) = inj₂ (there aP)
+  to a (x ∷ xs) ys       (here a≡x) = inj₁ (here a≡x)
+  to a (x ∷ xs) ys       (there aP) with to a xs ys aP
+  ...                                  | inj₁ e = inj₁ (there e)
+  ...                                  | inj₂ e = inj₂ e
+
+  from : ∀ {A : Set} (a : A) (xs ys : List A) →
+    (a ∈ xs ⊎ a ∈ ys) → (a ∈ (xs ++ ys))
+  from a []       (y ∷ ys) (inj₂ yP) = yP
+  from a (x ∷ xs) ys (inj₁ (here a≡x)) = here a≡x
+  from a (x ∷ xs) ys (inj₁ (there xP)) = there (from a xs ys (inj₁ xP))
+  from a (x ∷ xs) (y ∷ ys) (inj₂ (here a≡y)) = there (from a xs (y ∷ ys) (inj₂ (here a≡y)))
+  from a (x ∷ xs) (y ∷ ys) (inj₂ (there yP)) = there (from a xs (y ∷ ys) (inj₂ (there yP)))
 ```
 
 #### Exercise `All-++-≃` (stretch)
@@ -1188,7 +1222,26 @@ If so, prove; if not, explain why.
 
 
 ```agda
--- Your code goes here
+¬Any⇔All¬ : ∀ {A : Set} {P : A → Set} (xs : List A) →
+    (¬_ ∘ Any P) xs ⇔ All (¬_ ∘ P) xs
+¬Any⇔All¬ xs =
+  record
+    { to   = to xs
+    ; from = from xs
+    }
+  where
+
+    to : ∀ {A : Set} {P : A → Set} (xs : List A) →
+      (¬_ ∘ Any P) xs → All (¬_ ∘ P) xs
+    to [] naP[] = []
+    to (x ∷ xs) naPx∷xs = (λ Px → naPx∷xs (here Px)) ∷ (to xs λ Pxs → naPx∷xs (there Pxs))
+
+    from : ∀ {A : Set} {P : A → Set} (xs : List A) →
+      All (¬_ ∘ P) xs → (¬_ ∘ Any P) xs
+    from [] [] = λ()
+    from (x ∷ xs) (naPx ∷ naPxs) = λ{ (here Px) → naPx Px
+                                    ; (there Pxs) → (from xs naPxs) Pxs
+                                    }
 ```
 
 #### Exercise `¬Any≃All¬` (stretch)
