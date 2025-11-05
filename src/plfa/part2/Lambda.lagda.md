@@ -191,7 +191,11 @@ two natural numbers.  Your definition may use `plus` as
 defined earlier.
 
 ```agda
--- Your code goes here
+mul : Term
+mul = μ "*" ⇒ ƛ "m" ⇒ ƛ "n" ⇒
+         case ` "m"
+           [zero⇒ `zero
+           |suc "m" ⇒ ` "+" · ` "n" · (` "*" · ` "m" · ` "n" ) ]
 ```
 
 
@@ -203,7 +207,9 @@ definition may use `plusᶜ` as defined earlier (or may not
 — there are nice definitions both ways).
 
 ```agda
--- Your code goes here
+mulᶜ : Term
+mulᶜ = ƛ "m" ⇒ ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒
+         ` "m" · (` "n" · ` "s") · ` "z"
 ```
 
 
@@ -255,7 +261,19 @@ plus′ = μ′ + ⇒ ƛ′ m ⇒ ƛ′ n ⇒
   m  =  ` "m"
   n  =  ` "n"
 ```
+
 Write out the definition of multiplication in the same style.
+```agda
+mul′ : Term
+mul′ = μ′ * ⇒ ƛ′ m ⇒ ƛ′ n ⇒
+          case′ m
+            [zero⇒ `zero
+            |suc m ⇒ plus′ · n · (* · m · n) ]
+  where
+  *  =  ` "*"
+  m  =  ` "m"
+  n  =  ` "n"
+```
 
 
 ### Formal vs informal
@@ -522,9 +540,27 @@ What is the result of the following substitution?
 
     (ƛ "y" ⇒ ` "x" · (ƛ "x" ⇒ ` "x")) [ "x" := `zero ]
 
+```agda
+_ : (ƛ "y" ⇒ ` "x" · (ƛ "x" ⇒ ` "x")) [ "x" := `zero ]
+  ≡ ƛ "y" ⇒ (` "x" · (ƛ "x" ⇒ ` "x")) [ "x" := `zero ]
+_ = refl
+
+_ : ƛ "y" ⇒ (` "x" · (ƛ "x" ⇒ ` "x")) [ "x" := `zero ]
+  ≡ ƛ "y" ⇒ (` "x") [ "x" := `zero ] · (ƛ "x" ⇒ ` "x") [ "x" := `zero ]
+_ = refl
+
+_ : ƛ "y" ⇒ (` "x") [ "x" := `zero ] · (ƛ "x" ⇒ ` "x") [ "x" := `zero ]
+  ≡ ƛ "y" ⇒ `zero · (ƛ "x" ⇒ ` "x") [ "x" := `zero ]
+_ = refl
+
+_ : ƛ "y" ⇒ `zero · (ƛ "x" ⇒ ` "x") [ "x" := `zero ]
+  ≡ ƛ "y" ⇒ `zero · (ƛ "x" ⇒ ` "x")
+_ = refl
+```
+
 1. `` (ƛ "y" ⇒ ` "x" · (ƛ "x" ⇒ ` "x")) ``
 2. `` (ƛ "y" ⇒ ` "x" · (ƛ "x" ⇒ `zero)) ``
-3. `` (ƛ "y" ⇒ `zero · (ƛ "x" ⇒ ` "x")) ``
+3. `` (ƛ "y" ⇒ `zero · (ƛ "x" ⇒ ` "x")) `` <<< This one!!!
 4. `` (ƛ "y" ⇒ `zero · (ƛ "x" ⇒ `zero)) ``
 
 
@@ -662,7 +698,7 @@ What does the following term step to?
 
     (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x")  —→  ???
 
-1.  `` (ƛ "x" ⇒ ` "x") ``
+1.  `` (ƛ "x" ⇒ ` "x") `` <<< I think it is this one because the LHS of · is a lambda and the RHS of · is a Value in addition to being a lambda, therefore β-ƛ reduces by substituting the actual prameter for the formal parameter yeilds the actual prameter since the LHS of · is the identity function.
 2.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
 3.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
 
@@ -671,7 +707,7 @@ What does the following term step to?
     (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x")  —→  ???
 
 1.  `` (ƛ "x" ⇒ ` "x") ``
-2.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
+2.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") `` <<< I think this is the case because of the fixity of · the middle labmda is substituted into the left lambda, yeilding only the middle lambda and the right lambda.
 3.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
 
 What does the following term step to?  (Where `twoᶜ` and `sucᶜ` are as
@@ -680,7 +716,7 @@ defined above.)
     twoᶜ · sucᶜ · `zero  —→  ???
 
 1.  `` sucᶜ · (sucᶜ · `zero) ``
-2.  `` (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · `zero ``
+2.  `` (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · `zero `` <<< I think this is the case because twoᶜ is a lambda so β-ƛ reduction applies.
 3.  `` `zero ``
 
 
@@ -770,7 +806,88 @@ Show that the first notion of reflexive and transitive closure
 above embeds into the second. Why are they not isomorphic?
 
 ```agda
--- Your code goes here
+open import plfa.part1.Isomorphism using (_≲_)
+
+—↠≲—↠′-to : ∀ {M N : Term} → M —↠ N → M —↠′ N
+—↠≲—↠′-to {m} {n} (.m ∎) = refl′ {m}
+—↠≲—↠′-to {l} {n} (step—→ .(_ · _) {m} {.n} mtn (ξ-·₁ ltm)) = trans′ (step′ (ξ-·₁ ltm)) (—↠≲—↠′-to mtn)
+—↠≲—↠′-to {l} {n} (step—→ .(_ · _) {m} {.n} mtn (ξ-·₂ x ltm)) = trans′ (step′ (ξ-·₂ x ltm)) (—↠≲—↠′-to mtn)
+—↠≲—↠′-to {l} {n} (step—→ .((ƛ _ ⇒ _) · _) {m} {.n} mtn (β-ƛ x)) = trans′ (step′ (β-ƛ x)) (—↠≲—↠′-to mtn)
+—↠≲—↠′-to {l} {n} (step—→ .(`suc _) {m} {.n} mtn (ξ-suc ltm)) = trans′ (step′ (ξ-suc ltm)) (—↠≲—↠′-to mtn)
+—↠≲—↠′-to {l} {n} (step—→ .(case _ [zero⇒ _ |suc _ ⇒ _ ]) {m} {.n} mtn (ξ-case ltm)) =
+  trans′ (step′ (ξ-case ltm)) (—↠≲—↠′-to mtn)
+—↠≲—↠′-to {l} {n} (step—→ .(case `zero [zero⇒ m |suc _ ⇒ _ ]) {m} {.n} mtn β-zero) =
+  trans′ (step′ β-zero) (—↠≲—↠′-to mtn)
+—↠≲—↠′-to {l} {n} (step—→ .(case `suc _ [zero⇒ _ |suc _ ⇒ _ ]) {m} {.n} mtn (β-suc x)) =
+  trans′ (step′ (β-suc x)) (—↠≲—↠′-to mtn)
+—↠≲—↠′-to {l} {n} (step—→ .(μ _ ⇒ _) {m} {.n} mtn β-μ) = trans′ (step′ β-μ) (—↠≲—↠′-to mtn)
+
+—↠≲—↠′-from : ∀ {M N : Term} → M —↠′ N → M —↠ N
+—↠≲—↠′-from {m} {n} (step′ mtn) = {!!}
+-- —↠≲—↠′-from {l∙m} {l'∙m} (step′ (ξ-·₁ ltl')) = step—→ l∙m (l'∙m ∎) (ξ-·₁ ltl')
+-- —↠≲—↠′-from {v∙m} {v∙m'} (step′ (ξ-·₂ {v} {_} {_} valV m→m')) = step—→ v∙m (v∙m' ∎) (ξ-·₂ valV m→m')
+-- —↠≲—↠′-from {m} {n} (step′ (β-ƛ valV)) = step—→ m (n ∎) (β-ƛ valV)
+-- —↠≲—↠′-from {m} {n} (step′ (ξ-suc x)) = step—→ m (n ∎) (ξ-suc x)
+-- —↠≲—↠′-from {m} {n} (step′ (ξ-case x)) = step—→ m (n ∎) (ξ-case x)
+-- —↠≲—↠′-from {m} {n} (step′ β-zero) = step—→ m (n ∎) β-zero
+-- —↠≲—↠′-from {m} {n} (step′ (β-suc x)) = step—→ m (n ∎) (β-suc x)
+-- —↠≲—↠′-from {m} {n} (step′ (β-μ {x} {M})) = step—→ m (n ∎) (β-μ {x} {M})
+
+—↠≲—↠′-from {m} {n} refl′ = m ∎
+
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') = step—→ l (—↠≲—↠′-from {m} {n} mtn') {!!}
+—↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') with (—↠≲—↠′-from ltm')
+...                                                     | (x ∎) = {!!}
+...                                                     | (step—→ x y z) = {!!}
+
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} (step′ x) mtn') = {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} refl′ mtn') = {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} (trans′ {l} {X} {m} ltX' Xtm') mtn') = —↠≲—↠′-from (
+
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (step′ x)) = {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' refl′) = {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (trans′ {.m} {X} {.n} mtX' Xtn')) = step—→ {!!} (—↠≲—↠′-from {{!!}} {{!!}} (trans′ {!!} ?)) {!!}
+
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') = step—→ l (step—→ m (n ∎) {!!}) {!!}
+
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') = step—→ l (—↠≲—↠′-from {m} {n} mtn') {!!}
+
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (step′ x)) = step—→ l (—↠≲—↠′-from {m} {n} {!!}) {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' refl′) = step—→ l (—↠≲—↠′-from {m} {n} {!!}) {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (trans′ mtn' mtn'')) = step—→ l (—↠≲—↠′-from {m} {n} (trans′ mtn' mtn'')) {!!}
+
+-- —↠≲—↠′-from {` x} {n} (trans′ {.(` x)} {m} {.n} ltm' mtn') = step—→ (` x) (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {ƛ x ⇒ l} {n} (trans′ {.(ƛ x ⇒ l)} {m} {.n} ltm' mtn') = step—→ (ƛ x ⇒ l) (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l · l₁} {n} (trans′ {.(l · l₁)} {m} {.n} ltm' mtn') = step—→ (l · l₁) (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {`zero} {n} (trans′ {.`zero} {m} {.n} refl′ mtn') = step—→ `zero (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {`zero} {n} (trans′ {.`zero} {m} {.n} (trans′ ltm' ltm'') mtn') = step—→ `zero (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {`suc l} {n} (trans′ {.(`suc l)} {m} {.n} ltm' mtn') = step—→ (`suc l) (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {case l [zero⇒ l₁ |suc x ⇒ l₂ ]} {n} (trans′ {.(case l [zero⇒ l₁ |suc x ⇒ l₂ ])} {m} {.n} ltm' mtn') = step—→ {!!} (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {μ x ⇒ l} {n} (trans′ {.(μ x ⇒ l)} {m} {.n} ltm' mtn') = step—→ {!!} (—↠≲—↠′-from mtn') {!!}
+
+-- —↠≲—↠′-from {l} {` x} (trans′ {.l} {m} {.(` x)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l} {ƛ x ⇒ n} (trans′ {.l} {m} {.(ƛ x ⇒ n)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l} {n · n₁} (trans′ {.l} {m} {.(n · n₁)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l} {`zero} (trans′ {.l} {m} {.`zero} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l} {`suc n} (trans′ {.l} {m} {.(`suc n)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l} {case n [zero⇒ n₁ |suc x ⇒ n₂ ]} (trans′ {.l} {m} {.(case n [zero⇒ n₁ |suc x ⇒ n₂ ])} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l} {μ x ⇒ n} (trans′ {.l} {m} {.(μ x ⇒ n)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+
+-- —↠≲—↠′-from {l} {n} (trans′ ltn' (step′ {m} {.n} mtn)) = step—→ l {m} {n} (step—→ {!!} ({!!} ∎) mtn) {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ ltn' refl′) = —↠≲—↠′-from ltn'
+-- —↠≲—↠′-from {l} {n} (trans′ ltn' (trans′ mtn' mtn'')) = {!!}
+
+-- —↠≲—↠′-from {l} {n} (trans′ (step′ {.l} {m} ltm) mtn') = step—→ l {m} {n} (—↠≲—↠′-from mtn') ltm
+-- —↠≲—↠′-from {l} {n} (trans′ (refl′ {m}) ltn) = —↠≲—↠′-from ltn
+-- —↠≲—↠′-from {l} {n} (trans′ (trans′ ltm ltm₁) mtn) = step—→ l {{!!}} {{!!}} {!!} {!!}
+
+—↠≲—↠′ : ∀ {M N : Term} → M —↠ N ≲ M —↠′ N
+—↠≲—↠′ =
+  record
+    { to      = —↠≲—↠′-to
+    ; from    = —↠≲—↠′-from
+    ; from∘to = {!!}
+    }
 ```
 
 ## Confluence
