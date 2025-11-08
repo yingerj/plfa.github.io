@@ -30,7 +30,7 @@ of variants of lambda calculus.
 Be aware that the approach we take here is _not_ our recommended
 approach to formalisation.  Using de Bruijn indices and
 intrinsically-typed terms, as we will do in
-Chapter [DeBruijn](/DeBruijn/),
+Chapter [DeBruijn](/DeBruijn/)
 leads to a more compact formulation.  Nonetheless, we begin with named
 variables and extrinsically-typed terms,
 partly because names are easier than indices to read,
@@ -823,63 +823,77 @@ open import plfa.part1.Isomorphism using (_≲_)
 —↠≲—↠′-to {l} {n} (step—→ .(μ _ ⇒ _) {m} {.n} mtn β-μ) = trans′ (step′ β-μ) (—↠≲—↠′-to mtn)
 
 —↠≲—↠′-from : ∀ {M N : Term} → M —↠′ N → M —↠ N
-—↠≲—↠′-from {m} {n} (step′ mtn) = {!!}
--- —↠≲—↠′-from {l∙m} {l'∙m} (step′ (ξ-·₁ ltl')) = step—→ l∙m (l'∙m ∎) (ξ-·₁ ltl')
--- —↠≲—↠′-from {v∙m} {v∙m'} (step′ (ξ-·₂ {v} {_} {_} valV m→m')) = step—→ v∙m (v∙m' ∎) (ξ-·₂ valV m→m')
--- —↠≲—↠′-from {m} {n} (step′ (β-ƛ valV)) = step—→ m (n ∎) (β-ƛ valV)
--- —↠≲—↠′-from {m} {n} (step′ (ξ-suc x)) = step—→ m (n ∎) (ξ-suc x)
--- —↠≲—↠′-from {m} {n} (step′ (ξ-case x)) = step—→ m (n ∎) (ξ-case x)
--- —↠≲—↠′-from {m} {n} (step′ β-zero) = step—→ m (n ∎) β-zero
--- —↠≲—↠′-from {m} {n} (step′ (β-suc x)) = step—→ m (n ∎) (β-suc x)
--- —↠≲—↠′-from {m} {n} (step′ (β-μ {x} {M})) = step—→ m (n ∎) (β-μ {x} {M})
-
+-- —↠≲—↠′-from {m} {n} (step′ mtn) = {!!}
+—↠≲—↠′-from {l∙m} {l'∙m} (step′ (ξ-·₁ ltl')) = step—→ l∙m (l'∙m ∎) (ξ-·₁ ltl')
+—↠≲—↠′-from {v∙m} {v∙m'} (step′ (ξ-·₂ {v} {_} {_} valV m→m')) = step—→ v∙m (v∙m' ∎) (ξ-·₂ valV m→m')
+—↠≲—↠′-from {m} {n} (step′ (β-ƛ valV)) = step—→ m (n ∎) (β-ƛ valV)
+—↠≲—↠′-from {m} {n} (step′ (ξ-suc x)) = step—→ m (n ∎) (ξ-suc x)
+—↠≲—↠′-from {m} {n} (step′ (ξ-case x)) = step—→ m (n ∎) (ξ-case x)
+—↠≲—↠′-from {m} {n} (step′ β-zero) = step—→ m (n ∎) β-zero
+—↠≲—↠′-from {m} {n} (step′ (β-suc x)) = step—→ m (n ∎) (β-suc x)
+—↠≲—↠′-from {m} {n} (step′ (β-μ {x} {M})) = step—→ m (n ∎) (β-μ {x} {M})
 —↠≲—↠′-from {m} {n} refl′ = m ∎
 
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') = {!!}
+
 -- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') = step—→ l (—↠≲—↠′-from {m} {n} mtn') {!!}
-—↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') with (—↠≲—↠′-from ltm')
-...                                                     | (x ∎) = {!!}
-...                                                     | (step—→ x y z) = {!!}
-
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} (step′ x) mtn') = {!!}
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} refl′ mtn') = {!!}
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} (trans′ {l} {X} {m} ltX' Xtm') mtn') = —↠≲—↠′-from (
-
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (step′ x)) = {!!}
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' refl′) = {!!}
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (trans′ {.m} {X} {.n} mtX' Xtn')) = step—→ {!!} (—↠≲—↠′-from {{!!}} {{!!}} (trans′ {!!} ?)) {!!}
 
 -- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') = step—→ l (step—→ m (n ∎) {!!}) {!!}
 
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') = step—→ l (—↠≲—↠′-from {m} {n} mtn') {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (step′ {.m} {.n} m→n)) with (—↠≲—↠′-from ltm') -- = step—→ l {m} {n} (step—→ m (n ∎) m→n) {!!}
+-- ... | .l ∎ = step—→ l (step—→ m (n ∎) m→n) {!!} --(—↠≲—↠′-from ltm')
+-- ... | .l —→⟨ x₁ ⟩ ltm = step—→ l (step—→ m (n ∎) {!!}) {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' refl′) = (—↠≲—↠′-from ltm')
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') with (—↠≲—↠′-from ltm') | (—↠≲—↠′-from mtn')
+-- ... | .l ∎ | .l ∎ = (—↠≲—↠′-from ltm')
+-- ... | .l ∎ | .l —→⟨ x ⟩ mtn = (—↠≲—↠′-from mtn')
+-- ... | .l —→⟨ x ⟩ ltm | .n ∎ = (—↠≲—↠′-from ltm')
+-- ... | .l —→⟨ x ⟩ ltm | .m —→⟨ x₁ ⟩ mtn = {!!}
 
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (step′ x)) = step—→ l (—↠≲—↠′-from {m} {n} {!!}) {!!}
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' refl′) = step—→ l (—↠≲—↠′-from {m} {n} {!!}) {!!}
--- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' (trans′ mtn' mtn'')) = step—→ l (—↠≲—↠′-from {m} {n} (trans′ mtn' mtn'')) {!!}
+—↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} (step′ x) mtn') = step—→ l (—↠≲—↠′-from {m} {n} mtn') x
+—↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} refl′ mtn') = (—↠≲—↠′-from {m} {n} mtn')
+—↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') with (—↠≲—↠′-from ltm')
+... | .l ∎ = (—↠≲—↠′-from mtn')
+--... | step—→ .l {i} {.m} itm lti = {!!}
+--... | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+—↠≲—↠′-from {l} {` x} (trans′ {.l} {m} {.(` x)} ltm' mtn') | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = step—→ l {m} {{!!}} (—↠≲—↠′-from mtn') {!!}
+—↠≲—↠′-from {l} {ƛ x ⇒ n} (trans′ {.l} {m} {.(ƛ x ⇒ n)} ltm' mtn') | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = {!!}
+—↠≲—↠′-from {l} {n · n₁} (trans′ {.l} {m} {.(n · n₁)} ltm' mtn') | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = {!!}
+—↠≲—↠′-from {l} {`zero} (trans′ {.l} {m} {.`zero} ltm' mtn') | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = {!!}
+—↠≲—↠′-from {l} {`suc n} (trans′ {.l} {m} {.(`suc n)} ltm' mtn') | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = {!!}
+—↠≲—↠′-from {l} {case n [zero⇒ n₁ |suc x ⇒ n₂ ]} (trans′ {.l} {m} {.(case n [zero⇒ n₁ |suc x ⇒ n₂ ])} ltm' mtn') | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = {!!}
+—↠≲—↠′-from {l} {μ x ⇒ n} (trans′ {.l} {m} {.(μ x ⇒ n)} ltm' mtn') | step—→ .(L · M) {i} {.m} itm (ξ-·₁ {L} {L'} {M} lti) = {!!}
+... | step—→ .(_ · _) {i} {.m} itm (ξ-·₂ x lti) = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+... | step—→ .((ƛ _ ⇒ _) · _) {i} {.m} itm (β-ƛ x) = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+... | step—→ .(`suc _) {i} {.m} itm (ξ-suc lti) = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+... | step—→ .(case _ [zero⇒ _ |suc _ ⇒ _ ]) {i} {.m} itm (ξ-case lti) = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+... | step—→ .(case `zero [zero⇒ i |suc _ ⇒ _ ]) {i} {.m} itm β-zero = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+... | step—→ .(case `suc _ [zero⇒ _ |suc _ ⇒ _ ]) {i} {.m} itm (β-suc x) = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+... | step—→ .(μ _ ⇒ _) {i} {.m} itm β-μ = step—→ l {m} {n} (—↠≲—↠′-from mtn') {!!}
+--—↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') with (—↠≲—↠′-from ltm') | (—↠≲—↠′-from mtn')
+--... | .l ∎ | .l ∎ = (—↠≲—↠′-from ltm')
+--... | .l ∎ | .l —→⟨ x ⟩ mtn = (—↠≲—↠′-from mtn')
+--... | .l —→⟨ x ⟩ ltm | .n ∎ = (—↠≲—↠′-from ltm')
+---- We've got this l > i > m > j > n sequence going on:
+---- ... | step—→ .l {i} {.m} i↠m l→i | step—→ .m {j} {.n} j↠n m→j = step—→ l {i} {n} {!!} l→i
+--... | step—→ .l {i} {.m} i↠m l→i | step—→ .m {j} {.n} j↠n m→j = step—→ l {i} {n} (step—→ i {m} {{!!}} {!!} {!!}) l→i
+---- ... | .l —→⟨ m→j ⟩ ltm | .m —→⟨ x₁ ⟩ mtn = ?
 
--- —↠≲—↠′-from {` x} {n} (trans′ {.(` x)} {m} {.n} ltm' mtn') = step—→ (` x) (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {ƛ x ⇒ l} {n} (trans′ {.(ƛ x ⇒ l)} {m} {.n} ltm' mtn') = step—→ (ƛ x ⇒ l) (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {l · l₁} {n} (trans′ {.(l · l₁)} {m} {.n} ltm' mtn') = step—→ (l · l₁) (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {`zero} {n} (trans′ {.`zero} {m} {.n} refl′ mtn') = step—→ `zero (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {`zero} {n} (trans′ {.`zero} {m} {.n} (trans′ ltm' ltm'') mtn') = step—→ `zero (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {`suc l} {n} (trans′ {.(`suc l)} {m} {.n} ltm' mtn') = step—→ (`suc l) (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {case l [zero⇒ l₁ |suc x ⇒ l₂ ]} {n} (trans′ {.(case l [zero⇒ l₁ |suc x ⇒ l₂ ])} {m} {.n} ltm' mtn') = step—→ {!!} (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {μ x ⇒ l} {n} (trans′ {.(μ x ⇒ l)} {m} {.n} ltm' mtn') = step—→ {!!} (—↠≲—↠′-from mtn') {!!}
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} (step′ x) mtn') = (step—→ l (—↠≲—↠′-from mtn') x)
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} refl′ mtn') = (—↠≲—↠′-from mtn')
+-- —↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} (trans′ {.l} ltm' ltm'') mtn') = step—→ l (—↠≲—↠′-from (trans′ {!!} {!!})) {!!}
 
--- —↠≲—↠′-from {l} {` x} (trans′ {.l} {m} {.(` x)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {l} {ƛ x ⇒ n} (trans′ {.l} {m} {.(ƛ x ⇒ n)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {l} {n · n₁} (trans′ {.l} {m} {.(n · n₁)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {l} {`zero} (trans′ {.l} {m} {.`zero} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {l} {`suc n} (trans′ {.l} {m} {.(`suc n)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {l} {case n [zero⇒ n₁ |suc x ⇒ n₂ ]} (trans′ {.l} {m} {.(case n [zero⇒ n₁ |suc x ⇒ n₂ ])} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
--- —↠≲—↠′-from {l} {μ x ⇒ n} (trans′ {.l} {m} {.(μ x ⇒ n)} ltm' mtn') = step—→ l (—↠≲—↠′-from mtn') {!!}
+--—↠≲—↠′-from {l} {n} (trans′ {.l} {m} {.n} ltm' mtn') with (—↠≲—↠′-from ltm')
+--... | .l ∎ = —↠≲—↠′-from mtn'
+--... | .(_ · _) —→⟨ ξ-·₁ x ⟩ ltm = step—→ l (—↠≲—↠′-from mtn') {!!} --(ξ-·₁ {?} {?} {?} ?)
+--... | .(_ · _) —→⟨ ξ-·₂ x x₁ ⟩ ltm = step—→ l (—↠≲—↠′-from mtn') {!!}
+--... | .((ƛ _ ⇒ _) · _) —→⟨ β-ƛ x ⟩ ltm = step—→ {!!} {!!} {!!}
+--... | .(`suc _) —→⟨ ξ-suc x ⟩ ltm = step—→ {!!} {!!} {!!}
+--... | .(case _ [zero⇒ _ |suc _ ⇒ _ ]) —→⟨ ξ-case x ⟩ ltm = step—→ {!!} {!!} {!!}
+--... | .(case `zero [zero⇒ _ |suc _ ⇒ _ ]) —→⟨ β-zero ⟩ ltm = step—→ {!!} {!!} {!!}
+--... | .(case `suc _ [zero⇒ _ |suc _ ⇒ _ ]) —→⟨ β-suc x ⟩ ltm = step—→ {!!} {!!} {!!}
+--... | .(μ _ ⇒ _) —→⟨ β-μ ⟩ ltm = step—→ l (—↠≲—↠′-from mtn') {!!}
 
--- —↠≲—↠′-from {l} {n} (trans′ ltn' (step′ {m} {.n} mtn)) = step—→ l {m} {n} (step—→ {!!} ({!!} ∎) mtn) {!!}
--- —↠≲—↠′-from {l} {n} (trans′ ltn' refl′) = —↠≲—↠′-from ltn'
--- —↠≲—↠′-from {l} {n} (trans′ ltn' (trans′ mtn' mtn'')) = {!!}
-
--- —↠≲—↠′-from {l} {n} (trans′ (step′ {.l} {m} ltm) mtn') = step—→ l {m} {n} (—↠≲—↠′-from mtn') ltm
--- —↠≲—↠′-from {l} {n} (trans′ (refl′ {m}) ltn) = —↠≲—↠′-from ltn
--- —↠≲—↠′-from {l} {n} (trans′ (trans′ ltm ltm₁) mtn) = step—→ l {{!!}} {{!!}} {!!} {!!}
 
 —↠≲—↠′ : ∀ {M N : Term} → M —↠ N ≲ M —↠′ N
 —↠≲—↠′ =
